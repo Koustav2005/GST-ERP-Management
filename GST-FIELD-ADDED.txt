@@ -1,0 +1,135 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║     ✅ GST NUMBER FIELD ADDED FOR MANAGEMENT!                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🎯 WHAT'S NEW:
+
+✅ GST Number field in Management signup
+✅ Optional field (can be left empty)
+✅ Auto-converts to UPPERCASE
+✅ 15 character limit (standard GST format)
+✅ Stored in companies table
+✅ Returned in login/signup responses
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 MANAGEMENT SIGNUP FORM NOW:
+
+┌─────────────────────────────────────┐
+│ Name: [John Doe                  ]  │
+│ Email: [john@svce.com            ]  │
+│ Password: [********              ]  │
+│ Confirm: [********               ]  │
+│ Role: [Management (Company)     ▼]  │
+│ Company Name: [SVCE Industries   ]  │
+│ GST Number: [29ABCDE1234F1Z5    ]  │ ← NEW!
+│                                     │
+│           [Sign Up]                 │
+└─────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ FEATURES:
+
+Auto-Uppercase:
+  Type: 29abcde1234f1z5
+  Shows: 29ABCDE1234F1Z5
+
+Optional:
+  Can leave empty
+  Add later if needed
+
+Character Limit:
+  Maximum 15 characters
+  Standard GST format
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🗄️ DATABASE:
+
+companies table now includes:
+  ├── id
+  ├── name
+  ├── email
+  ├── gst_number ← Stores GST number
+  ├── address
+  ├── phone
+  ├── created_at
+  └── updated_at
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 API RESPONSE:
+
+Signup/Login now returns:
+{
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "role": "management",
+    "company": {
+      "id": 1,
+      "name": "SVCE Industries",
+      "gst_number": "29ABCDE1234F1Z5" ← NEW!
+    }
+  },
+  "token": "..."
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 TO TEST:
+
+1. Restart backend:
+   cd backend
+   npm run dev
+
+2. Restart frontend:
+   npx expo start
+   Press: r
+
+3. Test signup:
+   - Role: Management (Company)
+   - Company: SVCE Industries
+   - GST: 29ABCDE1234F1Z5
+   - Sign up
+
+4. Verify:
+   cd backend
+   node check-companies.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 GST NUMBER FORMAT:
+
+Example: 29ABCDE1234F1Z5
+         ││└─────────┘│││
+         ││    PAN    │││
+         │└───────────┘││
+         │  State Code ││
+         └─────────────┘│
+              Check Digit
+
+Valid examples:
+  • 29ABCDE1234F1Z5
+  • 27XYZAB5678G2Y4
+  • 09AABCU9603R1ZM
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ FILES UPDATED:
+
+Frontend:
+  ✅ src/screens/AuthScreen.js
+  ✅ src/config/api.js
+
+Backend:
+  ✅ backend/routes/auth.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 READY TO USE!
+
+Management can now enter GST number during signup!

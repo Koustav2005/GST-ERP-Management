@@ -1,0 +1,89 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║         HOW TO CONNECT TO POSTGRESQL DATABASE                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Your PostgreSQL is running, but we need the password!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EASIEST METHOD - Interactive Setup:
+
+  1. Open Command Prompt in this folder (backend)
+  
+  2. Run this command:
+     node interactive-setup.js
+  
+  3. Press Enter for all prompts EXCEPT password
+  
+  4. When it asks for password, enter YOUR PostgreSQL password
+     (The one you set when installing PostgreSQL)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ DON'T KNOW YOUR PASSWORD?
+
+Option A: Check Installation Notes
+  - Look for password in PostgreSQL installation folder
+  - Check: C:\Program Files\PostgreSQL\18\installation_notes.txt
+
+Option B: Reset Password (5 minutes)
+
+  Step 1: Open as Administrator:
+    C:\Program Files\PostgreSQL\18\data\pg_hba.conf
+
+  Step 2: Find this line (around line 80-90):
+    host    all             all             127.0.0.1/32            scram-sha-256
+
+  Step 3: Change "scram-sha-256" to "trust":
+    host    all             all             127.0.0.1/32            trust
+
+  Step 4: Save file and restart PostgreSQL:
+    net stop postgresql-x64-18
+    net start postgresql-x64-18
+
+  Step 5: Connect without password:
+    psql -U postgres
+
+  Step 6: Set new password (replace 'mypassword'):
+    ALTER USER postgres PASSWORD 'mypassword';
+    \q
+
+  Step 7: Change pg_hba.conf back to "scram-sha-256"
+
+  Step 8: Restart PostgreSQL again:
+    net stop postgresql-x64-18
+    net start postgresql-x64-18
+
+  Step 9: Now run:
+    node interactive-setup.js
+    (Use your new password: mypassword)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 AFTER SUCCESSFUL CONNECTION:
+
+You'll see:
+  ✓ Connection successful!
+  ✓ Database created
+  ✓ Tables created
+  ✓ .env file updated
+  ✅ Setup completed successfully!
+
+Then start the server:
+  npm run dev
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 HELPFUL COMMANDS:
+
+Test connection:        node test-connection.js
+Find password:          node find-password.js
+Interactive setup:      node interactive-setup.js
+Connection help:        connect-help.bat
+Full guide:             CONNECT-DATABASE.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👉 START HERE: node interactive-setup.js

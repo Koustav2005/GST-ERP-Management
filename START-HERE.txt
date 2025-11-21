@@ -1,0 +1,68 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║          GST MANAGEMENT APP - QUICK START GUIDE              ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📋 WHAT'S READY:
+  ✅ React Native Expo app (SDK 54)
+  ✅ Login/Signup screens with 7 roles
+  ✅ Backend API (Node.js + Express)
+  ✅ PostgreSQL database schema
+  ✅ All dependencies installed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 SETUP IN 3 STEPS:
+
+STEP 1: Setup Database
+  Open Command Prompt in: gst-management-app\backend
+  Run: setup.bat
+  Choose option 1 and enter your PostgreSQL password
+
+STEP 2: Start Backend
+  Open Command Prompt in: gst-management-app\backend
+  Run: start.bat
+  Keep this window open!
+
+STEP 3: Start Frontend
+  Open NEW Command Prompt in: gst-management-app
+  Run: start-frontend.bat
+  Scan QR code with Expo Go app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 FOR PHONE TESTING:
+  1. Find your IP: ipconfig
+  2. Edit: src\config\api.js
+  3. Change: http://YOUR_IP:3000/api
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 HELPFUL FILES:
+  • README-SETUP.md - Visual setup guide
+  • SETUP-INSTRUCTIONS.md - Detailed instructions
+  • backend\QUICK-START.md - Backend details
+  • backend\test-connection.js - Test database
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 USER ROLES:
+  • Management (Company)
+  • Project Manager
+  • Accounts
+  • Store Incharge
+  • Worker
+  • Sales Executive
+  • NPD
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ NEED HELP?
+  PostgreSQL password issues? See: backend\QUICK-START.md
+  Connection problems? Run: backend\test-connection.js
+  Can't connect from phone? Check WiFi and firewall
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ready to start? Run: cd backend & setup.bat

@@ -1,0 +1,81 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║     🔧 FIX: Cannot Connect to Server Error                    ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+✅ I'VE ALREADY FIXED:
+  - Updated IP address to: 10.69.76.87
+  - File updated: src/config/api.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 NOW DO THIS (2 STEPS):
+
+STEP 1: Add Firewall Rule
+  
+  1. Go to: gst-management-app\backend\
+  2. Find: allow-firewall.bat
+  3. RIGHT-CLICK on it
+  4. Select: "Run as administrator"
+  5. Click: "Yes" when Windows asks
+
+  This allows your phone to connect to port 3000.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2: Restart Expo App
+
+  In your Expo terminal, press: r
+  
+  Or restart completely:
+    Ctrl+C (to stop)
+    npx expo start
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ THEN TEST:
+
+1. Open app on phone
+2. Fill login form
+3. Click Login
+4. Should work now!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 WHY THIS ERROR HAPPENED:
+
+Your computer's IP address changed from:
+  OLD: 10.117.237.87
+  NEW: 10.69.76.87
+
+This happens when:
+  - You reconnect to WiFi
+  - Router assigns new IP
+  - Network changes
+
+I've updated the IP in the app config.
+Just need to add firewall rule and restart!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 CHECKLIST:
+
+[ ] Backend running (npm run dev)
+[ ] Firewall rule added (allow-firewall.bat as admin)
+[ ] Expo app restarted (press r)
+[ ] Phone and computer on same WiFi
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 STILL NOT WORKING?
+
+Run this to diagnose:
+  FIX-CONNECTION-ERROR.bat
+
+Or check:
+  backend\test-from-network.bat
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quick fix: Just run allow-firewall.bat as admin and restart app!
