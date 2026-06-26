@@ -1,0 +1,7 @@
+﻿--- Database Diagnosis ---
+Existing tables: password_reset_tokens, users, projects, master_materials, companies, bill_of_materials, notifications, inventory, orders, enquiries, master_vendors, revisions, revision_bom_items, purchase_orders, purchase_order_items
+Γ¥î Table "major_orders" is MISSING!
+Γ¥î Table "order_receipts" is MISSING!
+Γ¥î Table "order_receipt_items" is MISSING!
+Γ£à Table "purchase_orders" exists.
+   Columns: id (integer), company_id (integer), master_vendor_id (integer), vendor_name (character varying), vendor_email (character varying), total_amount (numeric), status (character varying), created_by (integer), created_at (timestamp without time zone), updated_at (timestamp without time zone)

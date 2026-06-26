@@ -1,0 +1,201 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║     🔧 CAMERA & GALLERY "NOT AVAILABLE" ERROR - FIX           ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📱 THE ERROR YOU'RE SEEING:
+   "Camera is not available. Please use URL option."
+   "Gallery is not available. Please use URL option."
+
+🔍 WHY THIS HAPPENS:
+   The expo-image-picker module isn't properly installed or loaded.
+   This is common when native modules need to be rebuilt.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ THE FIX (Follow These Steps):
+
+STEP 1: Stop Everything
+   - Press Ctrl+C in the Expo terminal
+   - Close the app on your phone
+   - Wait 5 seconds
+
+STEP 2: Run the Fix Script
+   - Double-click: fix-image-picker.bat
+   - Wait for it to complete (2-3 minutes)
+   - You'll see "Fix Complete!" when done
+
+STEP 3: Start Fresh
+   - Run: npx expo start --clear
+   - Wait for QR code to appear
+   - Scan QR code on your phone
+   - Press 'r' to reload
+
+STEP 4: Test
+   - Login as NPD
+   - Open any project
+   - Click "Add" under Product Sketch
+   - Try Camera or Gallery
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ QUICK COMMANDS (Copy & Paste):
+
+# Stop Expo (Ctrl+C first)
+
+# Run fix
+fix-image-picker.bat
+
+# Start fresh
+npx expo start --clear
+
+# On phone: Press 'r' to reload
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 MANUAL FIX (If script doesn't work):
+
+1. Stop Expo (Ctrl+C)
+
+2. Delete folders:
+   - Delete: node_modules folder
+   - Delete: .expo folder
+   - Delete: package-lock.json file
+
+3. Reinstall:
+   npm install
+   npx expo install expo-image-picker
+   npx expo install expo-file-system
+
+4. Start fresh:
+   npx expo start --clear
+
+5. On phone: Press 'r'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 PERMISSIONS CHECK:
+
+After fix, the app will ask for:
+  ✅ Camera permission - Allow it
+  ✅ Gallery permission - Allow it
+
+If you accidentally denied:
+  1. Go to phone Settings
+  2. Find "Expo Go" app
+  3. Go to Permissions
+  4. Enable Camera and Photos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ STILL NOT WORKING?
+
+Try these additional steps:
+
+OPTION A: Complete Reset
+  1. Uninstall Expo Go from phone
+  2. Reinstall Expo Go from Play Store
+  3. Run: fix-image-picker.bat
+  4. Run: npx expo start --clear
+  5. Scan QR code again
+
+OPTION B: Check Node Modules
+  1. Open: node_modules folder
+  2. Look for: expo-image-picker folder
+  3. If missing, run: npm install expo-image-picker
+  4. Restart: npx expo start --clear
+
+OPTION C: Use Different Expo Version
+  1. Run: npx expo install --fix
+  2. Run: npx expo start --clear
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 TEMPORARY WORKAROUND:
+
+While fixing, you can still use the app:
+
+✅ URL Option Works:
+  1. Click "🔗 URL" button
+  2. Enter image URL
+  3. Example: https://example.com/image.jpg
+  4. Click Save
+
+✅ Bulk BOM Works:
+  - Add materials in bulk
+  - No camera needed
+  - Works perfectly!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 WHAT SHOULD WORK AFTER FIX:
+
+Product Sketch:
+  ✅ 📷 Camera - Take photo
+  ✅ 🖼️ Gallery - Select photo
+  ✅ 🔗 URL - Enter URL
+
+Bill of Materials:
+  ✅ Bulk entry (add multiple at once)
+  ✅ Simple display (name, qty, unit)
+  ✅ Delete materials
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 VERIFY FIX WORKED:
+
+After running fix-image-picker.bat, check:
+
+1. Look for this message:
+   "✅ expo-image-picker installed successfully!"
+
+2. Check folder exists:
+   node_modules\expo-image-picker
+
+3. Start app and test:
+   - Camera button should open camera
+   - Gallery button should open gallery
+   - No "Not Available" error
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 COMMON ISSUES:
+
+Issue: "Module not found"
+Fix: Run fix-image-picker.bat again
+
+Issue: "Permission denied"
+Fix: Allow permissions in phone settings
+
+Issue: "App crashes"
+Fix: Uninstall and reinstall Expo Go
+
+Issue: "Still shows Not Available"
+Fix: Use URL option, or contact support
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 FINAL CHECKLIST:
+
+Before testing:
+  ☐ Ran fix-image-picker.bat
+  ☐ Saw "Fix Complete!" message
+  ☐ Started with: npx expo start --clear
+  ☐ Pressed 'r' on phone to reload
+  ☐ Allowed camera permission
+  ☐ Allowed gallery permission
+
+If all checked, camera and gallery should work! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 NEED MORE HELP?
+
+The error message now includes instructions:
+  - It tells you to run fix-image-picker.bat
+  - It suggests using URL option as backup
+  - It's more helpful than before!
+
+Just follow the steps above and it will work! 💪
+

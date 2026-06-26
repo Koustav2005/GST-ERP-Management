@@ -1,0 +1,75 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║           🔧 FIX expo-image-picker ERROR                      ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📱 THE ERROR:
+   "expo-image-picker could not be found"
+
+✅ THE FIX (3 Steps):
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Stop Expo Server
+   Press: Ctrl + C (in the terminal running Expo)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2: Run Fix Script
+   Double-click: fix-image-picker.bat
+   
+   (This will reinstall packages properly)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 3: Restart with Clear Cache
+   Run: npx expo start --clear
+   
+   Then press: r (to reload app on phone)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 AFTER FIX:
+
+Test Camera Feature:
+  1. Login as NPD
+  2. Open any project
+  3. Click "Add" under Product Sketch
+  4. Try: 📷 Camera, 🖼️ Gallery, 🔗 URL
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ QUICK ALTERNATIVE (If in a hurry):
+
+The app now has a fallback!
+  - Camera/Gallery might show error
+  - But URL option ALWAYS works
+  - Bulk BOM works perfectly
+
+Just use the URL option for now:
+  1. Click "🔗 URL"
+  2. Enter image URL
+  3. Click Save
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ WHAT I FIXED:
+
+1. ✅ Added permissions to app.json
+2. ✅ Added expo-image-picker plugin config
+3. ✅ Added error handling in code
+4. ✅ Added fallback to URL option
+5. ✅ Created fix script
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 START HERE:
+
+1. Stop Expo (Ctrl+C)
+2. Run: fix-image-picker.bat
+3. Run: npx expo start --clear
+4. Press: r
+
+Done! 🎉
+

@@ -1,0 +1,107 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage{geometry}
+\geometry{margin=0.5in}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[colorlinks=true, linkcolor=darkblue, urlcolor=darkblue]{hyperref}
+\usepackage{array}
+\usepackage{fontawesome5}
+
+% Color and Formatting
+\definecolor{darkblue}{RGB}{0, 51, 102}
+\titleformat{\section}{\bfseries\small\color{darkblue}}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{8pt}{12pt}
+
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{left=0pt, itemsep=3pt, topsep=2pt, parsep=0pt, partopsep=0pt}
+\linespread{0.96}
+
+\begin{document}
+\pagestyle{empty}
+\vspace*{-10mm}
+
+\hypersetup{urlcolor=darkblue}
+
+% Header
+\begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+    \textbf{\LARGE Riya Kumari} &
+    \faLinkedin\ \href{https://www.linkedin.com/in/riya-kumari}{\textcolor{darkblue}{LinkedIn}} \\
+    Near BMW Showroom, BBD University, Lucknow – 226028 &
+    8298559380 \\
+    \faEnvelope\ \href{mailto:riyashahi1204@gmail.com}{\textcolor{darkblue}{riyashahi1204@gmail.com}} &
+\end{tabular*}
+
+% Professional Summary
+\section*{Professional Summary}
+Aspiring \textbf{Associate Project Manager} with a BBA (Analytics) background and hands-on experience in HR processes, data analysis, and reporting. Skilled in coordinating tasks, managing timelines, and communicating with stakeholders to support project objectives. Adept at using data-driven insights to improve efficiency and support strategic decision-making in corporate environments.
+
+% Key Highlights
+\section*{Key Highlights}
+\begin{itemize}
+    \item Experience supporting HR and analytics initiatives with clear deliverables and deadlines.
+    \item Strong exposure to data-driven decision-making and performance tracking.
+    \item Ability to coordinate activities, manage multiple tasks, and work with cross-functional stakeholders.
+    \item Certified in analytics and BI tools, enhancing project reporting and insights.
+\end{itemize}
+
+% Professional Experience
+\section*{Professional Experience}
+\textbf{HR Intern – Indus Towers (Summer Internship 2025)} \hfill Aug 2024 -- Nov 2024 \\
+\begin{itemize}
+    \item Supported end-to-end recruitment lifecycle including candidate sourcing, screening, and onboarding.
+    \item Conducted employee data analysis to identify trends, contributing to an 8\% reduction in attrition risk.
+    \item Prepared and presented structured reports to HR management for improved decision-making.
+    \item Coordinated logistics for training sessions and benefits administration.
+\end{itemize}
+
+% Academic and Personal Projects
+\section*{Academic \& Personal Projects}
+\begin{itemize}
+    \item \textbf{Employee Attrition Analysis} – Analytics Project \\
+    Defined the problem statement, processed HR datasets, collaborated on model development using Python and SQL, and presented insights to support retention strategies.
+    
+    \item \textbf{Sales Performance Dashboard} – Reporting \& Visualization Project \\
+    Designed an Excel dashboard to track monthly sales performance, enabling stakeholders to monitor KPIs and forecast trends.
+\end{itemize}
+
+% Education
+\section*{Education}
+\textbf{BBA (Analytics)} \hfill 2022 -- 2025 \\
+Babu Banarasi Das University
+
+\textbf{Intermediate} \hfill 2020 -- 2022 \\
+Ramashankar Devi High School
+
+\textbf{Matriculation} \hfill 2020 \\
+D.A.V. Public School
+
+% Core Skills (Associate Project Manager Focus)
+\section*{Core Skills}
+\begin{itemize}
+    \item Project Planning \& Task Coordination
+    \item Timeline Management \& Prioritization
+    \item Stakeholder Communication \& Team Collaboration
+    \item Requirement Understanding \& Documentation
+    \item Problem-Solving \& Critical Thinking
+    \item \textbf{Tools:} Excel, SQL, Python, Power BI
+\end{itemize}
+
+% Certifications
+\section*{Certifications \& Achievements}
+\begin{itemize}
+    \item Business Analytics
+    \item Planning Analytics
+    \item SQL \& Excel
+    \item Data Visualization with Python
+\end{itemize}
+
+% Languages
+\section*{Languages}
+\begin{itemize}
+    \item English
+    \item Hindi
+\end{itemize}
+
+\end{document}

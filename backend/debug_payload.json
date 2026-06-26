@@ -1,0 +1,13 @@
+{
+  "company_id": 1,
+  "item_name": "Ms sheet",
+  "hsn": "12367",
+  "purchased_date": "2026-03-16",
+  "mfg_date": "2024-11-12",
+  "exp_date": "2028-11-11",
+  "barcode_data": "ITEM DETAILS\nItem Name: Ms sheet\nHSN: 12367\nPurchased Date: 2026-03-16\nManufacturing Date: 2024-11-12\nExpiry Date: 2028-11-11\nQuantity: 1\nBatch Number: N/A\nMaterial Info: N/A\n\nJSON Data: {\"item_name\":\"Ms sheet\",\"hsn\":\"12367\",\"purchased_date\":\"2026-03-16\",\"mfg_date\":\"2024-11-12\",\"exp_date\":\"2028-11-11\",\"quantity\":1,\"batch_number\":null,\"material_info\":null}",
+  "batch_number": null,
+  "material_info": null,
+  "purchase_order_id": 18,
+  "purchase_order_item_id": 18
+}

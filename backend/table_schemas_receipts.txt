@@ -1,0 +1,4 @@
+order_receipts: id, order_id, company_id, bill_image_url, receipt_date, total_amount, total_gst_amount, status, submitted_by, approved_by, notes, created_at, updated_at, purchase_order_id
+
+order_receipt_items: id, receipt_id, order_id, item_name, hsn, quantity_ordered, quantity_received, unit, unit_price, gst_rate, gst_amount, total_amount, created_at, purchase_order_item_id
+

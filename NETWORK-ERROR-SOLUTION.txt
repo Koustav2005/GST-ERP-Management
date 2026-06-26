@@ -1,0 +1,165 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║              ❌ NETWORK ERROR → ✅ SOLUTION                    ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📱 YOUR ERROR:
+   ERROR  Connection test failed: [AxiosError: Network Error]
+   ERROR  Auth error: [AxiosError: Network Error]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 THE PROBLEM:
+
+   Backend server is NOT running!
+   
+   Your phone is trying to connect to:
+   http://10.117.237.87:3000/api
+   
+   But nothing is listening on port 3000.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ THE SOLUTION (Easy Way):
+
+   Double-click: START-BOTH-SERVERS.bat
+   
+   This will:
+   1. Start backend server (port 3000)
+   2. Start frontend Expo (QR code)
+   3. Open both in separate windows
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ THE SOLUTION (Manual Way):
+
+   Terminal 1 (Backend):
+   ┌─────────────────────────────────────┐
+   │ cd gst-management-app\backend       │
+   │ start.bat                           │
+   └─────────────────────────────────────┘
+   
+   Wait for: "Server running on port 3000"
+
+   Terminal 2 (Frontend):
+   ┌─────────────────────────────────────┐
+   │ cd gst-management-app               │
+   │ npx expo start                      │
+   └─────────────────────────────────────┘
+   
+   Wait for: QR code
+
+   Phone:
+   ┌─────────────────────────────────────┐
+   │ Scan QR code                        │
+   │ Press 'r' to reload                 │
+   └─────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 HOW IT WORKS:
+
+   Phone App
+      ↓
+   Connects to Frontend (Expo)
+      ↓
+   Frontend makes API calls
+      ↓
+   Backend Server (port 3000)
+      ↓
+   PostgreSQL Database
+      ↓
+   Returns data to phone
+
+   BOTH servers must be running!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖥️ WHAT YOU'LL SEE:
+
+   Terminal 1 (Backend):
+   ┌─────────────────────────────────────┐
+   │ ✅ Database connected               │
+   │ ✅ Server running on:               │
+   │    http://10.117.237.87:3000        │
+   └─────────────────────────────────────┘
+
+   Terminal 2 (Frontend):
+   ┌─────────────────────────────────────┐
+   │ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  │
+   │ █ ▄▄▄▄▄ █▀ ▀▄▀▀▄█▀▄█ ▄▄▄▄▄ █       │
+   │ █ █   █ █▀▀▄▀▄▀▀▄▀▄█ █   █ █       │
+   │ █ █▄▄▄█ █▀▄▀▄▀▀▄▀▄▀█ █▄▄▄█ █       │
+   │ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀  │
+   │                                     │
+   │ Metro waiting on exp://...          │
+   └─────────────────────────────────────┘
+
+   Phone:
+   ┌─────────────────────────────────────┐
+   │  GST Management App                 │
+   │                                     │
+   │  ✅ Connected                       │
+   │  ✅ Login screen shows              │
+   │  ✅ No network errors               │
+   └─────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IF STILL NOT WORKING:
+
+   1. Check Firewall
+      Run as Administrator:
+      backend\allow-firewall.bat
+
+   2. Check Same WiFi
+      PC and phone must be on same network
+
+   3. Check IP Address
+      Your current IP: 10.117.237.87
+      If changed, update api.js
+
+   4. Test Backend
+      Open browser:
+      http://localhost:3000/api/companies
+      Should see: [] or data
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 QUICK CHECKLIST:
+
+   Before testing:
+   ☐ Backend terminal open
+   ☐ Backend shows "Server running"
+   ☐ Frontend terminal open
+   ☐ Frontend shows QR code
+   ☐ Phone on same WiFi as PC
+   ☐ Firewall allowed (if needed)
+   ☐ Pressed 'r' to reload
+
+   If all checked, should work! ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 START NOW:
+
+   Option 1 (Easy):
+   📄 START-BOTH-SERVERS.bat
+
+   Option 2 (Manual):
+   Terminal 1: cd backend && start.bat
+   Terminal 2: npx expo start
+
+   Then press 'r' on phone! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 REMEMBER:
+
+   You need TWO terminals running:
+   1. Backend (port 3000)
+   2. Frontend (Expo)
+
+   Don't close either one while testing!
+

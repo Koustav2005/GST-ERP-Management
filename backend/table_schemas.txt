@@ -1,0 +1,6 @@
+major_orders: id, company_id, materials_detail_id, vendor_id, item_name, hsn, quantity, unit, unit_price, total_price, status, order_date, expected_delivery_date, created_by, created_at, updated_at
+
+purchase_order_items: id, po_id, material_name, hsn, quantity, unit, unit_price, total_price, created_at, gst_rate
+
+purchase_orders: id, company_id, master_vendor_id, vendor_name, vendor_email, total_amount, status, created_by, created_at, updated_at
+

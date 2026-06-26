@@ -1,0 +1,111 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║     ✅ IP DETECTION IMPROVED!                                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🔧 WHAT I FIXED:
+
+✅ Added multiple detection methods
+✅ Better debugging information
+✅ Fallback to manual IP if auto-detect fails
+✅ Works with Expo SDK 54
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 QUICK FIX:
+
+STEP 1: Restart Expo with clear cache
+  npx expo start -c
+
+STEP 2: Press 'r' to reload
+
+STEP 3: Check console output
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 WHAT YOU'LL SEE:
+
+Success (Auto-detected):
+  ✅ Auto-detected IP: 10.69.76.87
+  📡 API URL: http://10.69.76.87:3000/api
+
+Fallback (Manual IP):
+  ⚠️ Could not auto-detect IP, using manual IP: 10.69.76.87
+  📡 API URL: http://10.69.76.87:3000/api
+
+Either way, it will use the correct IP!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 HOW IT WORKS NOW:
+
+The app tries 4 different methods to detect IP:
+  1. expoConfig.hostUri (Expo SDK 46+)
+  2. manifest2.extra.expoGo.debuggerHost (SDK 50+)
+  3. manifest.debuggerHost (older versions)
+  4. Constants.debuggerHost (fallback)
+
+If all fail:
+  → Uses manual IP: 10.69.76.87
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️ IF YOUR IP CHANGES:
+
+Just update one line in: src/config/api.js
+
+Find this line:
+  const manualIP = '10.69.76.87';
+
+Change to your new IP:
+  const manualIP = '192.168.1.100';
+
+Or run:
+  auto-update-ip.bat
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CHECKLIST:
+
+[ ] Backend running (npm run dev)
+[ ] Firewall rule added (allow-firewall.bat as admin)
+[ ] Expo restarted with cache clear (npx expo start -c)
+[ ] App reloaded (press 'r')
+[ ] Check console for IP detection
+[ ] Connection test shows ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EXPECTED RESULT:
+
+Console shows:
+  ✅ Auto-detected IP: 10.69.76.87
+  📡 API URL: http://10.69.76.87:3000/api
+
+Connection test shows:
+  ✅ Connected! Found X companies
+
+App works:
+  Login/Signup functional
+  Companies dropdown populated
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TROUBLESHOOTING:
+
+Still shows localhost?
+  → Restart Expo with: npx expo start -c
+  → Press 'r' to reload
+
+Still can't connect?
+  → Check backend is running
+  → Check firewall rule added
+  → Check same WiFi network
+  → Update manual IP in api.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Restart Expo with cache clear and it should work! 🚀
+
+  npx expo start -c

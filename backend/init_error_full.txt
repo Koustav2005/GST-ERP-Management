@@ -1,0 +1,50 @@
+﻿--- Initializing Missing Procurement Tables (Robust Version) ---
+
+Processing database/materials-detail-schema.sql...
+node : Γ¥î 
+Initialization 
+failed: relation 
+"materials_detail" 
+does not exist
+At line:1 char:1
++ node init_missing_pr
+ocurement_tables.js 
+2>&1 | Out-File 
+-Encoding utf ...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (Γ¥î Initia   
+ lizat... does not    
+ exist:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+At statement: 
+undefined
+error: relation 
+"materials_detail" 
+does not exist
+    at 
+C:\Users\Saurabh Kumar
+\OneDrive\Desktop\GST-
+SVCEE\gst-management-a
+pp\backend\node_module
+s\pg-pool\index.js:45:
+11
+    at process.process
+TicksAndRejections (no
+de:internal/process/ta
+sk_queues:105:5)
+    at async initializ
+eMissingTables 
+(C:\Users\Saurabh Kuma
+r\OneDrive\Desktop\GST
+-SVCEE\gst-management-
+app\backend\init_missi
+ng_procurement_tables.
+js:28:21)

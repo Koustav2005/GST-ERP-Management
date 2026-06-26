@@ -1,0 +1,187 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║          🔧 FIX NETWORK ERROR - BACKEND NOT RUNNING           ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+❌ ERROR YOU'RE SEEING:
+   "Connection test failed: Network Error"
+   "Auth error: Network Error"
+
+🔍 THE PROBLEM:
+   The backend server is NOT running on port 3000.
+   Your phone can't connect because there's nothing to connect to!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ THE FIX (2 Steps):
+
+STEP 1: Start Backend Server
+   Open a NEW terminal and run:
+   
+   cd gst-management-app\backend
+   start.bat
+   
+   You should see:
+   "✅ Server running on http://10.117.237.87:3000"
+
+STEP 2: Keep Frontend Running
+   Your frontend is already running
+   Just press 'r' on your phone to reload
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 DETAILED STEPS:
+
+1. Open NEW Terminal Window
+   - Don't close the Expo terminal
+   - Open a second terminal
+
+2. Navigate to Backend
+   cd gst-management-app\backend
+
+3. Start Backend
+   start.bat
+
+4. Wait for Success Message
+   You'll see:
+   ✅ Database connected
+   ✅ Server running on http://10.117.237.87:3000
+
+5. Keep Both Running
+   Terminal 1: Backend (port 3000)
+   Terminal 2: Frontend (Expo)
+
+6. Test on Phone
+   Press 'r' to reload
+   Try login/signup
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖥️ YOUR CURRENT IP:
+   10.117.237.87
+
+   Frontend will connect to:
+   http://10.117.237.87:3000/api
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ FIREWALL CHECK:
+
+If backend starts but phone still can't connect:
+
+1. Allow Firewall (Run as Administrator)
+   cd backend
+   allow-firewall.bat
+
+2. Or manually:
+   - Open Windows Firewall
+   - Allow Node.js on port 3000
+   - Allow both Private and Public networks
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 VERIFY BACKEND IS RUNNING:
+
+After starting backend, check:
+
+1. Terminal shows:
+   ✅ Server running on http://10.117.237.87:3000
+
+2. Test in browser:
+   Open: http://localhost:3000/api/companies
+   Should see: [] or list of companies
+
+3. Test from network:
+   Open: http://10.117.237.87:3000/api/companies
+   Should see: [] or list of companies
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 BOTH SERVERS MUST RUN:
+
+Terminal 1 (Backend):
+  cd gst-management-app\backend
+  start.bat
+  
+  Shows: Server running on port 3000
+
+Terminal 2 (Frontend):
+  cd gst-management-app
+  npx expo start
+  
+  Shows: QR code
+
+Phone:
+  Scans QR code
+  Connects to both servers
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 QUICK START COMMANDS:
+
+Terminal 1 (Backend):
+  cd gst-management-app\backend
+  start.bat
+
+Terminal 2 (Frontend):
+  cd gst-management-app
+  npx expo start
+
+Phone:
+  Press 'r' to reload
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ AFTER BOTH ARE RUNNING:
+
+You should see:
+  ✅ Backend: Server running on port 3000
+  ✅ Frontend: QR code displayed
+  ✅ Phone: App loads without errors
+  ✅ Login: Works without "Network Error"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ COMMON MISTAKES:
+
+❌ Only running frontend (Expo)
+   → Backend must also run!
+
+❌ Backend not on same network
+   → Use same WiFi on PC and phone
+
+❌ Firewall blocking port 3000
+   → Run allow-firewall.bat
+
+❌ Wrong IP address
+   → Current IP: 10.117.237.87
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 CHECKLIST:
+
+Before testing:
+  ☐ Backend terminal open
+  ☐ Backend running (start.bat)
+  ☐ See "Server running on port 3000"
+  ☐ Frontend terminal open
+  ☐ Frontend running (npx expo start)
+  ☐ See QR code
+  ☐ Phone on same WiFi
+  ☐ Firewall allowed (if needed)
+
+If all checked, app should work! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 START NOW:
+
+1. Open NEW terminal
+2. Run: cd gst-management-app\backend
+3. Run: start.bat
+4. Keep frontend running
+5. Press 'r' on phone
+
+Done! 🎊
+

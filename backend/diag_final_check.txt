@@ -1,0 +1,10 @@
+﻿--- Database Diagnosis ---
+Existing tables: password_reset_tokens, users, projects, master_materials, companies, bill_of_materials, notifications, inventory, orders, enquiries, master_vendors, demand_items, vendor_demands, vendor_bids, revisions, revision_bom_items, bid_items, purchase_orders, purchase_order_items, materials_detail, major_orders, minor_orders, order_receipt_items, minor_order_bids, order_receipts
+Γ£à Table "major_orders" exists.
+   Columns: id (integer), company_id (integer), materials_detail_id (integer), vendor_id (integer), item_name (character varying), hsn (character varying), quantity (numeric), unit (character varying), unit_price (numeric), total_price (numeric), status (character varying), order_date (timestamp without time zone), expected_delivery_date (date), created_by (integer), created_at (timestamp without time zone), updated_at (timestamp without time zone)
+Γ£à Table "order_receipts" exists.
+   Columns: id (integer), order_id (integer), company_id (integer), bill_image_url (text), receipt_date (date), total_amount (numeric), total_gst_amount (numeric), status (character varying), submitted_by (integer), approved_by (integer), notes (text), created_at (timestamp without time zone), updated_at (timestamp without time zone)
+Γ£à Table "order_receipt_items" exists.
+   Columns: id (integer), receipt_id (integer), order_id (integer), item_name (character varying), hsn (character varying), quantity_ordered (numeric), quantity_received (numeric), unit (character varying), unit_price (numeric), gst_rate (numeric), gst_amount (numeric), total_amount (numeric), created_at (timestamp without time zone)
+Γ£à Table "purchase_orders" exists.
+   Columns: id (integer), company_id (integer), master_vendor_id (integer), vendor_name (character varying), vendor_email (character varying), total_amount (numeric), status (character varying), created_by (integer), created_at (timestamp without time zone), updated_at (timestamp without time zone)

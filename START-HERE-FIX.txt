@@ -1,0 +1,92 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║              📱 CAMERA & GALLERY NOT WORKING?                 ║
+║                                                               ║
+║                    👇 FIX IT IN 3 STEPS                       ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1️⃣  STOP EXPO
+
+   In the terminal running Expo, press:
+   
+   Ctrl + C
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2️⃣  RUN FIX
+
+   Double-click this file:
+   
+   📄 FIX-CAMERA-NOW.bat
+   
+   Wait for "✅ FIX COMPLETE!" (2-3 minutes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 3️⃣  RESTART
+
+   Run this command:
+   
+   npx expo start --clear
+   
+   Then on your phone, press: r
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ DONE! NOW TEST:
+
+   1. Login as NPD user
+   2. Open any project
+   3. Click "Add" under Product Sketch
+   4. Try:
+      📷 Camera - Should open camera
+      🖼️ Gallery - Should open gallery
+      🔗 URL - Always works
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ QUICK ALTERNATIVE:
+
+   Don't want to fix right now?
+   
+   Just use the 🔗 URL option!
+   
+   It works without camera/gallery:
+   1. Click "🔗 URL"
+   2. Enter image URL
+   3. Save
+   
+   Bulk BOM also works perfectly! ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 WHAT YOU'LL GET:
+
+   After fix:
+   ✅ Camera capture
+   ✅ Gallery import
+   ✅ URL input
+   ✅ Bulk material entry
+   ✅ Simple BOM (no cost/supplier)
+   ✅ Fast NPD workflow
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 SUMMARY:
+
+   Error: "Camera/Gallery not available"
+   
+   Fix: Run FIX-CAMERA-NOW.bat
+   
+   Time: 3 minutes
+   
+   Result: Everything works! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👉 START NOW: Double-click FIX-CAMERA-NOW.bat
+

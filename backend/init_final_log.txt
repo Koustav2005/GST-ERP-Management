@@ -1,0 +1,15 @@
+﻿--- Initializing Missing Procurement Tables (Robust Version) ---
+
+Processing database/vendor-portal-schema.sql...
+Γ£à Successfully applied database/vendor-portal-schema.sql
+
+Processing database/materials-detail-schema.sql...
+Γ£à Successfully applied database/materials-detail-schema.sql
+
+Processing database/orders-schema.sql...
+Γ£à Successfully applied database/orders-schema.sql
+
+Processing database/order-receipts-schema.sql...
+Γ£à Successfully applied database/order-receipts-schema.sql
+
+Γ£à All missing procurement tables are now initialized.
