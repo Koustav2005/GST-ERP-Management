@@ -23,6 +23,7 @@ app.use('/api/enquiries', require('./routes/enquiries'));
 app.use('/api/master-materials', require('./routes/master_materials'));
 app.use('/api/master-vendors', require('./routes/master_vendors'));
 app.use('/api/purchase-orders', require('./routes/purchase_orders'));
+app.use('/api/external-jobwork-materials', require('./routes/external-jobwork-materials'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'GST Management API' });
