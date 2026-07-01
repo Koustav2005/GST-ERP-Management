@@ -10,7 +10,7 @@ async function createExternalJobworkTables() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS external_jobwork_material_notifications (
         id SERIAL PRIMARY KEY,
-        job_work_id INT NOT NULL,
+        job_work_id INT,
         npd_user_id INT NOT NULL REFERENCES users(id),
         accountant_id INT REFERENCES users(id),
         company_id INT NOT NULL REFERENCES companies(id),
@@ -19,8 +19,7 @@ async function createExternalJobworkTables() {
         material_details JSONB,
         status VARCHAR(50) DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (job_work_id) REFERENCES job_work(id) ON DELETE CASCADE
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
     console.log('✓ external_jobwork_material_notifications table created');
@@ -30,7 +29,7 @@ async function createExternalJobworkTables() {
       CREATE TABLE IF NOT EXISTS external_jobwork_challans (
         id SERIAL PRIMARY KEY,
         notification_id INT NOT NULL REFERENCES external_jobwork_material_notifications(id) ON DELETE CASCADE,
-        job_work_id INT NOT NULL REFERENCES job_work(id),
+        job_work_id INT,
         company_id INT NOT NULL REFERENCES companies(id),
         accountant_id INT NOT NULL REFERENCES users(id),
         store_incharge_id INT NOT NULL REFERENCES users(id),
@@ -54,7 +53,7 @@ async function createExternalJobworkTables() {
       CREATE TABLE IF NOT EXISTS external_jobwork_inventory (
         id SERIAL PRIMARY KEY,
         challan_id INT NOT NULL REFERENCES external_jobwork_challans(id) ON DELETE CASCADE,
-        job_work_id INT NOT NULL REFERENCES job_work(id),
+        job_work_id INT,
         company_id INT NOT NULL REFERENCES companies(id),
         material_name VARCHAR(255) NOT NULL,
         quantity DECIMAL(10,2) NOT NULL,

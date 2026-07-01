@@ -57,6 +57,7 @@ export default function StoreInchargeDashboard({ user, onLogout, navigation }) {
         { title: 'In Stock', icon: '📥', action: 'InStockOrders' },
         { title: 'Out Stock', icon: '📤', action: 'OutStockRequests' },
         { title: 'Job Work', icon: '🏭', action: 'StoreInchargeJobWork' },
+        { title: 'External Material Receipt', icon: '📥', action: 'ExternalJobworkReceipt' },
         { title: 'Barcodes', icon: '🔖', action: 'Barcodes' },
     ];
 

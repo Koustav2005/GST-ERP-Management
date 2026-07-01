@@ -24,6 +24,7 @@ export default function AccountantDashboard({ user, onLogout, navigation }) {
         { title: 'Manage Orders', icon: '📦', action: 'ManageOrders' },
         { title: 'Requirements', icon: '📋', action: 'Requirements' },
         { title: 'Internal Job Work', icon: '🛠️', action: 'InternalJobWork' },
+        { title: 'External Material Challan', icon: '📑', action: 'ExternalJobworkChallan' },
     ];
 
     const handleMenuPress = (item) => {

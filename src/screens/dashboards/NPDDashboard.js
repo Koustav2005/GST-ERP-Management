@@ -19,6 +19,7 @@ export default function NPDDashboard({ user, onLogout, navigation }) {
         { title: 'Prototypes', icon: '🔧', action: null },
         { title: 'Testing', icon: '🧪', action: null },
         { title: 'Enquiries', icon: '📋', action: 'Enquiry' },
+        { title: 'Notify Material Arrival', icon: '📬', action: 'ExternalJobworkMaterialNotification' },
     ];
 
     const handleMenuPress = (item) => {
