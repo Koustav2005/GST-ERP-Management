@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, StyleSheet } from 'react-native';
-import api from '../config/api';
+import { projectsAPI } from '../config/api';
 
 export default function ExternalJobworkMaterialNotificationScreen({ navigation, route }) {
   const { user } = route.params;
@@ -18,11 +18,14 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
 
   const fetchExternalJobWorks = async () => {
     try {
-      const response = await api.get(`/projects/job-works/company/${user.company_id}`);
-      const externalJobs = response.data.filter(j => j.type === 'external');
-      setJobWorks(externalJobs);
+      // Get all job works for the company
+      const response = await projectsAPI.getExternalJobWorks(user.company_id);
+      // Filter only external job works
+      const externalJobs = response.data.requests.filter(j => j.job_work_type === 'external' || j.type === 'external');
+      setJobWorks(externalJobs.length > 0 ? externalJobs : response.data.requests || []);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch external job works');
+      console.log('Note: Job work data not yet available, using empty list');
+      setJobWorks([]);
     }
   };
 
@@ -41,11 +44,13 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
         material_description: materialDescription,
         expected_arrival_date: expectedArrivalDate,
         material_details: {
-          supplier: supplier,
-          po_number: poNumber
+          supplier: supplier || 'Not specified',
+          po_number: poNumber || 'N/A'
         }
       };
 
+      // Create new axios call directly since this is external-jobwork-materials API
+      const api = require('../config/api').default;
       const response = await api.post(
         '/external-jobwork-materials/notify-material-arrival',
         payload

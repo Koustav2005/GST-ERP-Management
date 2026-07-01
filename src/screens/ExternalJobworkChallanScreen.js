@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, StyleSheet, FlatList } from 'react-native';
-import api from '../config/api';
+import { default as api } from '../config/api';
 
 export default function ExternalJobworkChallanScreen({ navigation, route }) {
   const { user } = route.params;

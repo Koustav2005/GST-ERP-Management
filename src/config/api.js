@@ -271,6 +271,7 @@ export const projectsAPI = {
     },
   }),
   getJobWorkRequests: (companyId) => api.get(`/projects/job-work/company/${companyId}`),
+  getExternalJobWorks: (companyId) => api.get(`/projects/job-work/company/${companyId}`),
   getStoreInchargeJobWork: (storeInchargeId) => api.get(`/projects/job-work/store-incharge/${storeInchargeId}`),
   getAccountantJobWork: (accountantId) => api.get(`/projects/job-work/accountant/${accountantId}`),
   uploadJobWorkChallan: (id, formData) => api.put(`/projects/job-work/${id}/challan`, formData, {
