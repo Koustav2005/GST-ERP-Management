@@ -1516,7 +1516,7 @@ router.get('/:id/tax-summary', async (req, res) => {
 // ==================== REQUIREMENTS ROUTES ====================
 
 // Get accountants for a company
-router.get('/accountants/:companyId', async (req, res) => {
+router.get('/accountants/:companyId', authenticateToken, async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -1533,7 +1533,7 @@ router.get('/accountants/:companyId', async (req, res) => {
 });
 
 // Get store incharge users for a company
-router.get('/store-incharge/:companyId', async (req, res) => {
+router.get('/store-incharge/:companyId', authenticateToken, async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -5563,41 +5563,29 @@ router.post('/job-work/submit', authenticateToken, jobWorkUpload.array('images',
   }
 });
 
-// Fetch all Job Work Requests for a Company
+// Fetch all Job Work Requests for a Company (External Job Works only)
 router.get('/job-work/company/:companyId', authenticateToken, async (req, res) => {
   try {
     const { companyId } = req.params;
 
+    // Get all external_job_work projects for this company
     const requestsRes = await pool.query(`
-      SELECT jwr.*, 
-             p.name as project_name, 
-             uc.name as creator_name, 
-             usi.name as store_incharge_name,
-             ua.name as accountant_name
-      FROM job_work_requests jwr
-      LEFT JOIN projects p ON jwr.project_id = p.id
-      LEFT JOIN users uc ON jwr.created_by = uc.id
-      LEFT JOIN users usi ON jwr.store_incharge_id = usi.id
-      LEFT JOIN users ua ON jwr.accountant_id = ua.id
-      WHERE jwr.company_id = $1
-      ORDER BY jwr.created_at DESC
+      SELECT 
+        p.id,
+        p.name as project_name,
+        p.po_number as poen_number,
+        p.project_type,
+        p.description,
+        p.status,
+        p.po_number,
+        p.created_at,
+        p.created_by
+      FROM projects p
+      WHERE p.company_id = $1 AND p.project_type = 'external_job_work'
+      ORDER BY p.created_at DESC
     `, [parseInt(companyId)]);
 
     const requests = requestsRes.rows;
-
-    // Fetch items and images for each request
-    for (const reqObj of requests) {
-      const itemsRes = await pool.query(`
-        SELECT * FROM job_work_items WHERE job_work_id = $1
-      `, [reqObj.id]);
-      reqObj.items = itemsRes.rows;
-
-      const imagesRes = await pool.query(`
-        SELECT * FROM job_work_images WHERE job_work_id = $1
-      `, [reqObj.id]);
-      reqObj.images = imagesRes.rows;
-    }
-
     res.json({ requests });
   } catch (error) {
     console.error('Error fetching job work list:', error);

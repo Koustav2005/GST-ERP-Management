@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, StyleSheet, Modal } from 'react-native';
 import { projectsAPI } from '../config/api';
 
 export default function ExternalJobworkMaterialNotificationScreen({ navigation, route }) {
   const { user } = route.params;
   const [jobWorks, setJobWorks] = useState([]);
   const [selectedJobWork, setSelectedJobWork] = useState(null);
+  const [showJobWorkDropdown, setShowJobWorkDropdown] = useState(false);
+  const [accountants, setAccountants] = useState([]);
+  const [selectedAccountant, setSelectedAccountant] = useState(null);
   const [materialDescription, setMaterialDescription] = useState('');
   const [expectedArrivalDate, setExpectedArrivalDate] = useState('');
   const [supplier, setSupplier] = useState('');
@@ -14,23 +17,45 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
 
   useEffect(() => {
     fetchExternalJobWorks();
+    fetchAccountants();
   }, []);
 
   const fetchExternalJobWorks = async () => {
     try {
-      // Get all job works for the company
       const response = await projectsAPI.getExternalJobWorks(user.company_id);
-      // Filter only external job works
-      const externalJobs = response.data.requests.filter(j => j.job_work_type === 'external' || j.type === 'external');
-      setJobWorks(externalJobs.length > 0 ? externalJobs : response.data.requests || []);
+      console.log('Raw response:', response.data);
+      
+      // The backend now filters for external_job_work only, just use all results
+      setJobWorks(response.data.requests || []);
+      console.log('Fetched external job works:', response.data.requests);
     } catch (error) {
-      console.log('Note: Job work data not yet available, using empty list');
+      console.error('Error fetching job works:', error);
       setJobWorks([]);
     }
   };
 
+  const fetchAccountants = async () => {
+    try {
+      console.log('Fetching accountants for company:', user.company_id);
+      const response = await projectsAPI.getAccountants(user.company_id);
+      console.log('Full response:', response);
+      console.log('Response data:', response.data);
+      // The endpoint returns { accountants: [...] }
+      const accountantsList = response.data?.accountants || [];
+      console.log('Parsed accountants list:', accountantsList);
+      setAccountants(accountantsList);
+      if (accountantsList.length === 0) {
+        console.warn('No accountants found for company:', user.company_id);
+      }
+    } catch (error) {
+      console.error('Error fetching accountants:', error.message);
+      console.error('Error details:', error.response?.data);
+      setAccountants([]);
+    }
+  };
+
   const handleNotifyMaterial = async () => {
-    if (!selectedJobWork || !materialDescription || !expectedArrivalDate) {
+    if (!selectedJobWork || !selectedAccountant || !materialDescription || !expectedArrivalDate) {
       Alert.alert('Error', 'Please fill all required fields');
       return;
     }
@@ -40,6 +65,7 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
       const payload = {
         job_work_id: selectedJobWork.id,
         npd_user_id: user.id,
+        accountant_id: selectedAccountant.id,
         company_id: user.company_id,
         material_description: materialDescription,
         expected_arrival_date: expectedArrivalDate,
@@ -58,7 +84,7 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
 
       Alert.alert(
         'Success',
-        `Material arrival notification sent to ${response.data.notifications.length} accountants`,
+        `Notification sent to ${selectedAccountant.name}`,
         [
           {
             text: 'OK',
@@ -69,6 +95,7 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
               setSupplier('');
               setPoNumber('');
               setSelectedJobWork(null);
+              setSelectedAccountant(null);
             }
           }
         ]
@@ -90,20 +117,77 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
       {/* Select Job Work */}
       <View style={styles.section}>
         <Text style={styles.label}>Select External Job Work *</Text>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => setShowJobWorkDropdown(true)}
+        >
+          <Text style={styles.dropdownButtonText}>
+            {selectedJobWork ? selectedJobWork.poen_number || `Job Work #${selectedJobWork.id}` : '-- Select Job Work --'}
+          </Text>
+          <Text style={styles.dropdownArrow}>▼</Text>
+        </TouchableOpacity>
+
+        <Modal
+          visible={showJobWorkDropdown}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowJobWorkDropdown(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            onPress={() => setShowJobWorkDropdown(false)}
+          >
+            <View style={styles.dropdownModal}>
+              <ScrollView>
+                {jobWorks.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>No external job works available</Text>
+                  </View>
+                ) : (
+                  jobWorks.map(job => (
+                    <TouchableOpacity
+                      key={job.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setSelectedJobWork(job);
+                        setShowJobWorkDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>
+                        {job.poen_number || `Job Work #${job.id}`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
+
+      {/* Select Accountant */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Select Accountant *</Text>
         <ScrollView style={styles.jobWorkList}>
-          {jobWorks.map(job => (
-            <TouchableOpacity
-              key={job.id}
-              style={[
-                styles.jobWorkItem,
-                selectedJobWork?.id === job.id && styles.selectedJobWork
-              ]}
-              onPress={() => setSelectedJobWork(job)}
-            >
-              <Text style={styles.jobWorkName}>{job.external_company_name}</Text>
-              <Text style={styles.jobWorkId}>Job ID: {job.id}</Text>
-            </TouchableOpacity>
-          ))}
+          {accountants.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No accountants available</Text>
+            </View>
+          ) : (
+            accountants.map(acc => (
+              <TouchableOpacity
+                key={acc.id}
+                style={[
+                  styles.jobWorkItem,
+                  selectedAccountant?.id === acc.id && styles.selectedJobWork
+                ]}
+                onPress={() => setSelectedAccountant(acc)}
+              >
+                <Text style={styles.jobWorkName}>{acc.name}</Text>
+                <Text style={styles.jobWorkPurpose}>{acc.email}</Text>
+              </TouchableOpacity>
+            ))
+          )}
         </ScrollView>
       </View>
 
@@ -177,10 +261,10 @@ export default function ExternalJobworkMaterialNotificationScreen({ navigation, 
         <Text style={styles.infoTitle}>ℹ️ How It Works</Text>
         <Text style={styles.infoText}>
           1. Select the external job work project{'\n'}
-          2. Enter material description and arrival date{'\n'}
-          3. Click "Send Notification"{'\n'}
-          4. All accountants in your company will be notified{'\n'}
-          5. Accountant will create a challan for storage and tracking
+          2. Select specific accountant to notify{'\n'}
+          3. Enter material description and arrival date{'\n'}
+          4. Click "Send Notification"{'\n'}
+          5. Accountant will receive notification and create challan
         </Text>
       </View>
     </ScrollView>
@@ -232,8 +316,46 @@ const styles = StyleSheet.create({
     color: '#333',
     backgroundColor: '#f9f9f9'
   },
+  dropdownButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  dropdownButtonText: {
+    fontSize: 14,
+    color: '#333'
+  },
+  dropdownArrow: {
+    fontSize: 12,
+    color: '#999'
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center'
+  },
+  dropdownModal: {
+    backgroundColor: '#fff',
+    marginHorizontal: 30,
+    borderRadius: 8,
+    maxHeight: 300
+  },
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#333'
+  },
   jobWorkList: {
-    maxHeight: 150,
+    maxHeight: 200,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
@@ -248,14 +370,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#E1BEE7'
   },
   jobWorkName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333'
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 6
   },
-  jobWorkId: {
+  jobWorkPurpose: {
     fontSize: 12,
-    color: '#999',
-    marginTop: 4
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic'
+  },
+  jobWorkStatus: {
+    fontSize: 11,
+    color: '#2196F3',
+    marginTop: 4,
+    fontWeight: '600'
+  },
+  emptyState: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#999'
   },
   buttonContainer: {
     marginTop: 20,

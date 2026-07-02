@@ -66,8 +66,22 @@ export default function ExternalJobworkChallanScreen({ navigation, route }) {
   };
 
   const handleCreateChallan = async () => {
-    if (!selectedNotification || !selectedStoreIncharge || materialsList.length === 0) {
-      Alert.alert('Error', 'Please fill all required fields and add at least one material');
+    console.log('=== CREATE CHALLAN DEBUG ===');
+    console.log('selectedNotification:', selectedNotification);
+    console.log('selectedStoreIncharge:', selectedStoreIncharge);
+    console.log('materialsList:', materialsList);
+    console.log('materialsList.length:', materialsList.length);
+    
+    if (!selectedNotification) {
+      Alert.alert('Error', 'Please select a material notification');
+      return;
+    }
+    if (!selectedStoreIncharge) {
+      Alert.alert('Error', 'Please select a store incharge');
+      return;
+    }
+    if (materialsList.length === 0) {
+      Alert.alert('Error', 'Please add at least one material');
       return;
     }
 
@@ -86,6 +100,8 @@ export default function ExternalJobworkChallanScreen({ navigation, route }) {
         notes: notes,
         materials_list: materialsList
       };
+
+      console.log('Payload to send:', payload);
 
       const response = await api.post(
         '/external-jobwork-materials/create-challan',
@@ -127,24 +143,33 @@ export default function ExternalJobworkChallanScreen({ navigation, route }) {
       <View style={styles.section}>
         <Text style={styles.label}>Select Material Notification *</Text>
         <ScrollView style={styles.notificationList}>
-          {notifications.map(notif => (
-            <TouchableOpacity
-              key={notif.id}
-              style={[
-                styles.notificationItem,
-                selectedNotification?.id === notif.id && styles.selectedItem
-              ]}
-              onPress={() => setSelectedNotification(notif)}
-            >
-              <Text style={styles.itemTitle}>{notif.material_description}</Text>
-              <Text style={styles.itemSubtitle}>
-                Expected: {notif.expected_arrival_date}
-              </Text>
-              <Text style={styles.itemStatus}>
-                Status: {notif.status} • By: {notif.npd_name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {notifications.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No pending material notifications</Text>
+            </View>
+          ) : (
+            notifications.map(notif => (
+              <TouchableOpacity
+                key={notif.id}
+                style={[
+                  styles.notificationItem,
+                  selectedNotification?.id === notif.id && styles.selectedItem
+                ]}
+                onPress={() => setSelectedNotification(notif)}
+              >
+                <Text style={styles.itemTitle}>{notif.material_description}</Text>
+                <Text style={styles.itemSubtitle}>
+                  📌 Project: {notif.job_work_id}
+                </Text>
+                <Text style={styles.itemSubtitle}>
+                  📅 Expected: {notif.expected_arrival_date}
+                </Text>
+                <Text style={styles.itemStatus}>
+                  Status: {notif.status} • By: {notif.npd_name}
+                </Text>
+              </TouchableOpacity>
+            ))
+          )}
         </ScrollView>
       </View>
 
@@ -365,6 +390,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#666',
     marginTop: 4
+  },
+  emptyState: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  emptyText: {
+    fontSize: 12,
+    color: '#999'
   },
   button: {
     padding: 12,

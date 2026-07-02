@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 
 // NPD notifies accountant about incoming external job work materials
-router.post('/notify-material-arrival', async (req, res) => {
+router.post('/notify-material-arrival', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { 
       job_work_id, 
       npd_user_id, 
+      accountant_id,
       material_description, 
       material_details,
       expected_arrival_date,
@@ -16,51 +18,37 @@ router.post('/notify-material-arrival', async (req, res) => {
     } = req.body;
 
     // Validate input
-    if (!job_work_id || !npd_user_id || !material_description || !company_id) {
+    if (!job_work_id || !npd_user_id || !material_description || !company_id || !accountant_id) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Get all accountants in the company
-    const accountantsResult = await client.query(
-      `SELECT id FROM users WHERE company_id = $1 AND role = 'accountant'`,
-      [company_id]
+    // Create ONE notification record with specific accountant
+    const notificationResult = await client.query(
+      `INSERT INTO external_jobwork_material_notifications 
+       (job_work_id, npd_user_id, accountant_id, company_id, material_description, expected_arrival_date, material_details, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+       RETURNING *`,
+      [job_work_id, npd_user_id, accountant_id, company_id, material_description, expected_arrival_date, JSON.stringify(material_details || {})]
     );
 
-    if (accountantsResult.rows.length === 0) {
-      return res.status(400).json({ error: 'No accountant found in this company' });
-    }
+    const notification = notificationResult.rows[0];
 
-    // Create notification for each accountant
-    const notifications = [];
-    for (const accountant of accountantsResult.rows) {
-      const result = await client.query(
-        `INSERT INTO external_jobwork_material_notifications 
-         (job_work_id, npd_user_id, accountant_id, company_id, material_description, expected_arrival_date, material_details, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
-         RETURNING *`,
-        [job_work_id, npd_user_id, accountant.id, company_id, material_description, expected_arrival_date, JSON.stringify(material_details || {})]
-      );
-      notifications.push(result.rows[0]);
-    }
-
-    // Create notification records
-    for (const accountant of accountantsResult.rows) {
-      await client.query(
-        `INSERT INTO notifications (user_id, title, message, type, job_work_id, created_at)
-         VALUES ($1, $2, $3, $4, $5, NOW())`,
-        [
-          accountant.id,
-          'Material Arrival Notification',
-          `External job work material arriving: ${material_description}. Expected arrival: ${expected_arrival_date || 'Not specified'}. Please create challan.`,
-          'external_jobwork_material',
-          job_work_id
-        ]
-      );
-    }
+    // Send notification to the specific accountant
+    await client.query(
+      `INSERT INTO notifications (user_id, title, message, type, project_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [
+        accountant_id,
+        'Material Arrival Notification',
+        `External job work material arriving: ${material_description}. Expected arrival: ${expected_arrival_date || 'Not specified'}. Please create challan.`,
+        'external_jobwork_material',
+        job_work_id
+      ]
+    );
 
     res.json({
-      message: 'Material arrival notification sent to all accountants',
-      notifications
+      message: 'Material arrival notification sent to accountant',
+      notification
     });
 
   } catch (error) {
@@ -72,7 +60,7 @@ router.post('/notify-material-arrival', async (req, res) => {
 });
 
 // Accountant creates challan for external job work materials
-router.post('/create-challan', async (req, res) => {
+router.post('/create-challan', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { 
@@ -126,7 +114,7 @@ router.post('/create-challan', async (req, res) => {
 
     // Send notification to store incharge
     await client.query(
-      `INSERT INTO notifications (user_id, title, message, type, job_work_id, created_at)
+      `INSERT INTO notifications (user_id, title, message, type, project_id, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
       [
         store_incharge_id,
@@ -158,7 +146,7 @@ router.post('/create-challan', async (req, res) => {
 });
 
 // Store incharge marks material as received
-router.post('/receive-challan/:challanId', async (req, res) => {
+router.post('/receive-challan/:challanId', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { challanId } = req.params;
@@ -195,7 +183,7 @@ router.post('/receive-challan/:challanId', async (req, res) => {
 
     // Send notification to accountant
     await client.query(
-      `INSERT INTO notifications (user_id, title, message, type, job_work_id, created_at)
+      `INSERT INTO notifications (user_id, title, message, type, project_id, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
       [
         challan.accountant_id,
@@ -220,23 +208,29 @@ router.post('/receive-challan/:challanId', async (req, res) => {
 });
 
 // Get all material notifications for accountant
-router.get('/notifications/accountant/:accountantId/:companyId', async (req, res) => {
+router.get('/notifications/accountant/:accountantId/:companyId', authenticateToken, async (req, res) => {
   try {
     const { accountantId, companyId } = req.params;
 
     const result = await pool.query(
       `SELECT 
-        n.*,
-        jw.id as job_work_id,
-        jw.external_company_name,
-        u.name as npd_name,
-        COUNT(c.id) as challan_count
+        n.id,
+        n.job_work_id,
+        n.npd_user_id,
+        n.accountant_id,
+        n.company_id,
+        n.material_description,
+        n.expected_arrival_date,
+        n.material_details,
+        n.status,
+        n.created_at,
+        p.name as project_name,
+        p.po_number,
+        u.name as npd_name
        FROM external_jobwork_material_notifications n
-       LEFT JOIN job_work jw ON n.job_work_id = jw.id
+       LEFT JOIN projects p ON n.job_work_id = p.id
        LEFT JOIN users u ON n.npd_user_id = u.id
-       LEFT JOIN external_jobwork_challans c ON n.id = c.notification_id
        WHERE n.accountant_id = $1 AND n.company_id = $2
-       GROUP BY n.id, jw.id, u.id
        ORDER BY n.created_at DESC`,
       [accountantId, companyId]
     );
@@ -250,22 +244,21 @@ router.get('/notifications/accountant/:accountantId/:companyId', async (req, res
 });
 
 // Get all challans for store incharge
-router.get('/challans/store-incharge/:storeInchargeId/:companyId', async (req, res) => {
+router.get('/challans/store-incharge/:storeInchargeId/:companyId', authenticateToken, async (req, res) => {
   try {
     const { storeInchargeId, companyId } = req.params;
 
     const result = await pool.query(
       `SELECT 
         c.*,
-        jw.external_company_name,
+        p.name as project_name,
+        p.po_number,
         a.name as accountant_name,
-        COUNT(i.id) as material_count
+        (SELECT COUNT(*) FROM external_jobwork_inventory WHERE challan_id = c.id) as material_count
        FROM external_jobwork_challans c
-       LEFT JOIN job_work jw ON c.job_work_id = jw.id
+       LEFT JOIN projects p ON c.job_work_id = p.id
        LEFT JOIN users a ON c.accountant_id = a.id
-       LEFT JOIN external_jobwork_inventory i ON c.id = i.challan_id
        WHERE c.store_incharge_id = $1 AND c.company_id = $2
-       GROUP BY c.id, jw.id, a.id
        ORDER BY c.created_at DESC`,
       [storeInchargeId, companyId]
     );
@@ -279,7 +272,7 @@ router.get('/challans/store-incharge/:storeInchargeId/:companyId', async (req, r
 });
 
 // Get external job work inventory for a specific job work
-router.get('/inventory/:jobWorkId/:companyId', async (req, res) => {
+router.get('/inventory/:jobWorkId/:companyId', authenticateToken, async (req, res) => {
   try {
     const { jobWorkId, companyId } = req.params;
 
@@ -306,7 +299,7 @@ router.get('/inventory/:jobWorkId/:companyId', async (req, res) => {
 });
 
 // Get challan details with all materials
-router.get('/challan-details/:challanId', async (req, res) => {
+router.get('/challan-details/:challanId', authenticateToken, async (req, res) => {
   try {
     const { challanId } = req.params;
 

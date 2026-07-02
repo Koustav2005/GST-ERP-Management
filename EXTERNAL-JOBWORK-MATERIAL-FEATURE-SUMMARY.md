@@ -36,7 +36,7 @@ GET    /api/external-jobwork-materials/challan-details/{challanId}
 ### 2. Frontend Screens
 
 #### Screen 1: ExternalJobworkMaterialNotificationScreen (NPD)
-**Location**: `src/screens/ExternalJobworkMaterialNotificationScreen.js`
+**Location**: `src/screens/ExternalJobworkMaterialNotificationScreen.js
 
 **Purpose**: NPD notifies about incoming external job work materials
 

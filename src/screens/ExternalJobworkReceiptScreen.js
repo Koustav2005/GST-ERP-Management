@@ -132,13 +132,16 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
                   <View>
                     <Text style={styles.challanNumber}>{challan.challan_number}</Text>
                     <Text style={styles.challanDetail}>
+                      📌 Project: {challan.job_work_id}
+                    </Text>
+                    <Text style={styles.challanDetail}>
                       Material: {challan.material_description}
                     </Text>
                     <Text style={styles.challanDetail}>
                       Items: {challan.material_count}
                     </Text>
                     <Text style={styles.challanDetail}>
-                      Expected: {challan.expected_arrival_date}
+                      📅 Expected: {challan.expected_arrival_date}
                     </Text>
                     <Text style={styles.accountantName}>
                       Created by: {challan.accountant_name}

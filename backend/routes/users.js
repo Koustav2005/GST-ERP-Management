@@ -142,4 +142,26 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Get users by role for a company
+router.get('/by-role/:role/:companyId', authenticateToken, async (req, res) => {
+    try {
+        const { role, companyId } = req.params;
+
+        // Verify user belongs to this company
+        if (req.user.company_id != companyId) {
+            return res.status(403).json({ error: 'Unauthorized - Not in this company' });
+        }
+
+        const result = await pool.query(
+            'SELECT id, name, email, role FROM users WHERE company_id = $1 AND role = $2 AND is_approved = TRUE ORDER BY name',
+            [companyId, role]
+        );
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;
