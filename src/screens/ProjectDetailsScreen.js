@@ -48,6 +48,10 @@ export default function ProjectDetailsScreen({ route, navigation }) {
   const [revisionSketchImage, setRevisionSketchImage] = useState(null);
   const [revisionNotes, setRevisionNotes] = useState('');
   const [revisionBOMRows, setRevisionBOMRows] = useState([{ material_name: '', quantity: '', unit: 'pcs', hsn: '' }, { material_name: '', quantity: '', unit: 'pcs', hsn: '' }, { material_name: '', quantity: '', unit: 'pcs', hsn: '' }]);
+
+  // Collections state
+  const [collections, setCollections] = useState([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
   const [selectedRevision, setSelectedRevision] = useState(null);
   const [revisionBOMItems, setRevisionBOMItems] = useState([]);
   const [revisionViewModalVisible, setRevisionViewModalVisible] = useState(false);
@@ -69,15 +73,49 @@ export default function ProjectDetailsScreen({ route, navigation }) {
   const [activeSuggestionRow, setActiveSuggestionRow] = useState(null); // which row is showing suggestions
   const [activeRevisionSuggestionRow, setActiveRevisionSuggestionRow] = useState(null); // for revision BOM
 
+  const [externalJobWorkMaterials, setExternalJobWorkMaterials] = useState([]);
+  const [loadingExternalMaterials, setLoadingExternalMaterials] = useState(false);
+
+  const fetchExternalJobWorkMaterials = async () => {
+    try {
+      setLoadingExternalMaterials(true);
+      const response = await projectsAPI.getProjectExternalMaterials(project.id);
+      setExternalJobWorkMaterials(response.data.materials || []);
+    } catch (error) {
+      console.error('Error fetching external job work materials:', error);
+      setExternalJobWorkMaterials([]);
+    } finally {
+      setLoadingExternalMaterials(false);
+    }
+  };
+
+  const fetchProjectCollections = async () => {
+    try {
+      setLoadingCollections(true);
+      console.log('📋 Fetching collections for project:', project.id);
+      console.log('🔍 DEBUG: Project object keys:', Object.keys(project));
+      console.log('🔍 DEBUG: Full project object:', JSON.stringify(project, null, 2));
+      const response = await projectsAPI.getProjectCollections(project.id);
+      console.log('✅ Collections fetched:', response.data.collections);
+      console.log('✅ Debug info:', response.data.debug);
+      setCollections(response.data.collections || []);
+    } catch (error) {
+      console.error('❌ Error fetching project collections:', error);
+      setCollections([]);
+    } finally {
+      setLoadingCollections(false);
+    }
+  };
+
+  const [storeRequests, setStoreRequests] = useState([]);
+  const [expandedRequests, setExpandedRequests] = useState({});
+  const [loadingRequests, setLoadingRequests] = useState(false);
+
   const [projectWorkers, setProjectWorkers] = useState([]);
   const [availableWorkers, setAvailableWorkers] = useState([]);
   const [selectedWorkerForAssign, setSelectedWorkerForAssign] = useState('');
   const [selectedWorkerForRequest, setSelectedWorkerForRequest] = useState('');
   const [loadingWorkers, setLoadingWorkers] = useState(false);
-
-  const [storeRequests, setStoreRequests] = useState([]);
-  const [expandedRequests, setExpandedRequests] = useState({});
-  const [loadingRequests, setLoadingRequests] = useState(false);
 
   const fetchStoreRequests = async () => {
     try {
@@ -534,24 +572,39 @@ export default function ProjectDetailsScreen({ route, navigation }) {
     fetchStoreRequests();
     fetchStatusHistory();
     fetchInternalReports();
-    if (user.role === 'npd') {
-      fetchProjectManagers();
-      fetchRevisions();
-    } else if (user.role === 'project_manager') {
+    // Fetch external materials for ALL job work projects regardless of project type
+    // This ensures Project Manager can request materials from external inventory
+    fetchExternalJobWorkMaterials();
+    if (user.role === 'project_manager') {
       // Project Manager should see latest revision
       fetchLatestRevision();
       fetchAccountants();
       fetchStoreIncharge();
       fetchProjectWorkers();
       fetchCompanyWorkers();
+      fetchProjectCollections();
+    } else if (user.role === 'npd') {
+      fetchProjectManagers();
+      fetchRevisions();
     }
-  }, []);
+  }, [project.id]);
 
   useEffect(() => {
     if (modalVisible) {
       fetchInventoryItems();
     }
   }, [modalVisible]);
+
+  // Refresh collections when screen is focused (for real-time updates)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (user.role === 'project_manager') {
+        console.log('🔄 Screen focused - refreshing collections');
+        fetchProjectCollections();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, user.role]);
 
   const fetchProjectDetails = async () => {
     try {
@@ -1277,6 +1330,59 @@ export default function ProjectDetailsScreen({ route, navigation }) {
           </View>
         )}
 
+        {/* External Job Work Material Section (Project Manager only) */}
+        {user.role === 'project_manager' && (
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>📦 External Job Work Material</Text>
+              <TouchableOpacity 
+                onPress={fetchExternalJobWorkMaterials}
+                disabled={loadingExternalMaterials}
+                style={styles.refreshButton}
+              >
+                <Text style={styles.refreshButtonText}>{loadingExternalMaterials ? '⟳' : '↻'}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.cardDescription}>
+              Request materials from project's external job work inventory
+            </Text>
+
+            {/* Materials List */}
+            {loadingExternalMaterials ? (
+              <ActivityIndicator size="small" color="#5856D6" style={{ marginVertical: 10 }} />
+            ) : externalJobWorkMaterials.length > 0 ? (
+              <View style={styles.materialsListContainer}>
+                {externalJobWorkMaterials.map((material, index) => (
+                  <View key={index} style={styles.materialItemRow}>
+                    <View style={styles.materialItemContent}>
+                      <Text style={styles.materialItemName}>{material.material_name}</Text>
+                      <Text style={styles.materialItemQty}>
+                        Available: {material.available_quantity} {material.unit}
+                      </Text>
+                    </View>
+                    <View style={styles.materialItemBadge}>
+                      <Text style={styles.materialItemBadgeText}>
+                        {material.available_quantity} {material.unit}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.noMaterialsText}>
+                No materials available in external job work inventory
+              </Text>
+            )}
+
+            <TouchableOpacity
+              style={styles.externalJobWorkBtn}
+              onPress={() => navigation.navigate('ExternalJobworkMaterialRequest', { project, user })}
+            >
+              <Text style={styles.externalJobWorkBtnText}>➕ Request Materials</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Store Requests Status (Project Manager only) */}
         {user.role === 'project_manager' && (
           <View style={styles.card}>
@@ -1363,6 +1469,60 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                   </View>
                 );
               })
+            )}
+          </View>
+        )}
+
+        {/* Material Collections (Project Manager only) */}
+        {user.role === 'project_manager' && (
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>📥 Material Collections</Text>
+              <TouchableOpacity 
+                onPress={fetchProjectCollections}
+                disabled={loadingCollections}
+                style={styles.refreshButton}
+              >
+                <Text style={styles.refreshButtonText}>{loadingCollections ? '⟳' : '↻'}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.cardDescription}>
+              History of materials collected by workers
+            </Text>
+
+            {loadingCollections ? (
+              <ActivityIndicator size="small" color="#34C759" style={{ marginVertical: 10 }} />
+            ) : collections.length > 0 ? (
+              <View style={styles.collectionsContainer}>
+                {collections.map((collection, index) => (
+                  <View key={collection.transaction_id} style={styles.collectionItem}>
+                    <View style={styles.collectionHeader}>
+                      <View>
+                        <Text style={styles.collectionWorker}>👤 {collection.worker_name}</Text>
+                        <Text style={styles.collectionTime}>
+                          🕐 {new Date(collection.collected_at).toLocaleString()}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.collectionMaterials}>
+                      {collection.materials.map((material, midx) => (
+                        <Text key={midx} style={styles.collectionMaterial}>
+                          • {material.quantity} {material.unit} of {material.material_name}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyCollectionsContainer}>
+                <Text style={styles.noCollectionsText}>
+                  📭 No material collections yet
+                </Text>
+                <Text style={styles.noCollectionsHelpText}>
+                  Collections will appear here when workers collect materials via QR code scan
+                </Text>
+              </View>
             )}
           </View>
         )}
@@ -3403,6 +3563,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#F2F2F7',
+  },
+  refreshButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
   addButton: {
     backgroundColor: '#AF52DE',
     paddingHorizontal: 12,
@@ -4583,5 +4759,138 @@ const styles = StyleSheet.create({
   removeMaterialText: {
     color: 'white',
     fontSize: 14,
+  },
+  // External Job Work Material styles
+  materialsListContainer: {
+    marginBottom: 12,
+    backgroundColor: '#F9F9FB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    overflow: 'hidden',
+  },
+  materialItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  materialItemRow_last: {
+    borderBottomWidth: 0,
+  },
+  materialItemContent: {
+    flex: 1,
+  },
+  materialItemName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 4,
+  },
+  materialItemQty: {
+    fontSize: 11,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  materialItemBadge: {
+    backgroundColor: '#5856D6',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginLeft: 12,
+  },
+  materialItemBadgeText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  noMaterialsText: {
+    fontSize: 12,
+    color: '#8E8E93',
+    fontStyle: 'italic',
+    marginVertical: 10,
+    textAlign: 'center',
+  },
+  cardDescription: {
+    fontSize: 13,
+    color: '#8E8E93',
+    marginBottom: 12,
+  },
+  externalJobWorkBtn: {
+    backgroundColor: '#5856D6',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  externalJobWorkBtnText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  collectionsContainer: {
+    marginTop: 10,
+  },
+  collectionItem: {
+    backgroundColor: '#F0F9FF',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#34C759',
+  },
+  collectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  collectionWorker: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  collectionTime: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  collectionMaterials: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  collectionMaterial: {
+    fontSize: 13,
+    color: '#555',
+    marginVertical: 2,
+  },
+  noCollectionsText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  emptyCollectionsContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  noCollectionsHelpText: {
+    fontSize: 12,
+    color: '#BBB',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

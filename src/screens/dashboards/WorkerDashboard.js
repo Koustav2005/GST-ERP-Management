@@ -27,7 +27,7 @@ try {
 
 const { width } = Dimensions.get('window');
 
-export default function WorkerDashboard({ user, onLogout }) {
+export default function WorkerDashboard({ user, onLogout, navigation }) {
   const [activeTab, setActiveTab] = useState('projects'); // 'projects', 'collected'
   const [projectSubTab, setProjectSubTab] = useState('regular');
   const [projects, setProjects] = useState([]);
@@ -418,6 +418,17 @@ export default function WorkerDashboard({ user, onLogout }) {
         </View>
       </View>
 
+      {/* Quick Action Buttons */}
+      <View style={styles.quickActionsContainer}>
+        <TouchableOpacity
+          style={styles.quickActionBtn}
+          onPress={() => navigation.navigate('ExternalJobworkMaterialCollection', { user })}
+        >
+          <Text style={styles.quickActionIcon}>📦</Text>
+          <Text style={styles.quickActionText}>Collect External Materials</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -653,6 +664,34 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     marginTop: 4,
     textAlign: 'center',
+  },
+  quickActionsContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  quickActionBtn: {
+    backgroundColor: '#5856D6',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quickActionIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  quickActionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'white',
+    flex: 1,
   },
   tabContainer: {
     flexDirection: 'row',

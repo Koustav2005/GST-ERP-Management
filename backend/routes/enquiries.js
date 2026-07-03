@@ -781,8 +781,8 @@ router.get('/download-po-file/:filename', async (req, res) => {
 router.put('/:id/customer-review', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, remarks } = req.body;
-        const { company_id } = req.user;
+        const { status, remarks, project_type } = req.body;
+        const { company_id, id: userId } = req.user;
 
         if (!status || !['accepted_by_customer', 'rejected_by_customer'].includes(status)) {
             return res.status(400).json({ error: 'Valid status is required' });
@@ -800,6 +800,42 @@ router.put('/:id/customer-review', authenticateToken, async (req, res) => {
 
         if (updateResult.rows.length === 0) {
             return res.status(404).json({ error: 'Enquiry not found' });
+        }
+
+        const enquiry = updateResult.rows[0];
+        let newProject = null;
+
+        // If customer accepted and project_type is external_job_work, create project
+        if (status === 'accepted_by_customer' && project_type === 'external_job_work') {
+            console.log('📦 Creating external job work project from accepted enquiry:', enquiry.enquiry_number);
+            
+            const projectName = `EJW-${enquiry.enquiry_number}-${Date.now()}`;
+            const description = `External job work auto-created from Enquiry ${enquiry.enquiry_number} (${enquiry.title}). Accepted by customer on ${new Date().toLocaleString()}`;
+
+            const projectResult = await pool.query(
+                `INSERT INTO projects (name, description, company_id, assigned_to, priority, status, created_by, project_type)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                 RETURNING *`,
+                [projectName, description, company_id, enquiry.assigned_to || userId, 'high', 'active', userId, 'external_job_work']
+            );
+
+            newProject = projectResult.rows[0];
+            console.log('✅ External job work project created:', newProject.id, projectName);
+
+            // Notify assigned NPD user about the new project
+            if (enquiry.assigned_to) {
+                await pool.query(
+                    `INSERT INTO notifications (user_id, title, message, type, project_id)
+                     VALUES ($1, $2, $3, $4, $5)`,
+                    [
+                        enquiry.assigned_to,
+                        'New External Job Work Project Created',
+                        `External job work project "${projectName}" created from accepted enquiry ${enquiry.enquiry_number}`,
+                        'project_created',
+                        newProject.id
+                    ]
+                );
+            }
         }
 
         // Notify NPD user if assigned
@@ -820,7 +856,8 @@ router.put('/:id/customer-review', authenticateToken, async (req, res) => {
 
         res.json({
             message: `Customer decision recorded: ${status}`,
-            enquiry: updateResult.rows[0]
+            enquiry: updateResult.rows[0],
+            project: newProject
         });
     } catch (error) {
         console.error('Error recording customer review:', error);

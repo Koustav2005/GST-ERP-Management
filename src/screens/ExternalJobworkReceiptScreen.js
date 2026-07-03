@@ -15,36 +15,64 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
     fetchChallans();
   }, []);
 
+  const fixStoreInchargeAssignments = async () => {
+    try {
+      console.log('🔧 Fixing store incharge assignments for company:', user.company_id);
+      const response = await api.post(`/external-jobwork-materials/debug/fix-store-incharge/${user.company_id}`, {});
+      Alert.alert('Fixed', response.data.message, [{ text: 'OK', onPress: fetchChallans }]);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fix assignments');
+    }
+  };
+
   const fetchChallans = async () => {
     try {
+      console.log('🔄 Fetching pending challans for user:', user.id);
       const response = await api.get(
         `/external-jobwork-materials/challans/store-incharge/${user.id}/${user.company_id}`
       );
-      setChallans(response.data.filter(c => c.challan_status === 'pending'));
+      console.log('✅ Challans fetched:', response.data);
+      setChallans(response.data);
     } catch (error) {
+      console.error('❌ Error fetching challans:', error);
       Alert.alert('Error', 'Failed to fetch challans');
     }
   };
 
   const fetchChallanDetails = async (challanId) => {
     try {
+      console.log('🔄 Fetching challan details for ID:', challanId);
       const response = await api.get(
         `/external-jobwork-materials/challan-details/${challanId}`
       );
+      
+      console.log('✅ Challan details response:', response.data);
+      console.log('📦 Challan object:', response.data.challan);
+      console.log('📋 Items:', response.data.items);
+      
       setChallanDetails(response.data);
       
       // Initialize received materials with zero quantities
-      const initialReceived = response.data.materials.map(m => ({
+      // Backend returns 'items', not 'materials'
+      const materials = response.data.items || response.data.materials || [];
+      console.log('📝 Materials to map:', materials);
+      
+      const initialReceived = materials.map(m => ({
         material_name: m.material_name,
         received_quantity: '0'
       }));
+      
+      console.log('✍️ Initial received materials:', initialReceived);
       setReceivedMaterials(initialReceived);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch challan details');
+      console.error('❌ Error fetching challan details:', error);
+      console.error('Error response:', error.response?.data);
+      Alert.alert('Error', 'Failed to fetch challan details: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const handleChallanSelect = (challan) => {
+    console.log('🎯 Selected challan:', challan);
     setSelectedChallan(challan);
     fetchChallanDetails(challan.id);
   };
@@ -78,10 +106,17 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
         notes: inspectionNotes
       };
 
+      console.log('📤 Sending receive-challan payload:', {
+        challanId: selectedChallan.id,
+        payload
+      });
+
       const response = await api.post(
         `/external-jobwork-materials/receive-challan/${selectedChallan.id}`,
         payload
       );
+
+      console.log('✅ Receive response:', response.data);
 
       Alert.alert(
         'Success',
@@ -100,6 +135,8 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
         ]
       );
     } catch (error) {
+      console.error('❌ Error receiving material:', error);
+      console.error('Error response:', error.response?.data);
       Alert.alert('Error', error.response?.data?.error || 'Failed to receive material');
     } finally {
       setLoading(false);
@@ -111,6 +148,29 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
       <View style={styles.header}>
         <Text style={styles.title}>Receive External Job Work Materials</Text>
         <Text style={styles.subtitle}>Store Incharge - Receipt & Verification</Text>
+        {challans.length === 0 && (
+          <View>
+            <TouchableOpacity 
+              style={styles.fixButton}
+              onPress={fixStoreInchargeAssignments}
+            >
+              <Text style={styles.fixButtonText}>🔧 Fix Assignments</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.fixButton, {backgroundColor: '#4CAF50', marginTop: 8}]}
+              onPress={async () => {
+                try {
+                  await api.post(`/external-jobwork-materials/debug/reset-challan/8`, {});
+                  Alert.alert('Success', 'Challan 8 reset to pending', [{ text: 'OK', onPress: fetchChallans }]);
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to reset');
+                }
+              }}
+            >
+              <Text style={styles.fixButtonText}>🔄 Reset Challan 8</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Select Challan */}
@@ -170,18 +230,29 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
             </TouchableOpacity>
 
             <View style={styles.challanHeader}>
-              <Text style={styles.headerTitle}>{selectedChallan.challan_number}</Text>
+              <Text style={styles.headerTitle}>{challanDetails?.challan?.challan_number || selectedChallan.challan_number}</Text>
               <Text style={styles.headerSubtitle}>
-                {selectedChallan.material_description}
+                {challanDetails?.challan?.material_description || selectedChallan.material_description}
               </Text>
               <View style={styles.headerInfo}>
                 <Text style={styles.headerInfoText}>
-                  📅 Expected: {selectedChallan.expected_arrival_date}
+                  📌 Project: {challanDetails?.challan?.project_name || 'N/A'}
                 </Text>
                 <Text style={styles.headerInfoText}>
-                  👤 By: {selectedChallan.accountant_name}
+                  📊 Job ID: {challanDetails?.challan?.job_id || 'N/A'}
                 </Text>
               </View>
+              <View style={styles.headerInfo}>
+                <Text style={styles.headerInfoText}>
+                  📅 Expected: {challanDetails?.challan?.expected_arrival_date ? new Date(challanDetails.challan.expected_arrival_date).toLocaleDateString() : (selectedChallan?.expected_arrival_date ? new Date(selectedChallan.expected_arrival_date).toLocaleDateString() : 'N/A')}
+                </Text>
+                <Text style={styles.headerInfoText}>
+                  👤 NPD: {challanDetails?.challan?.npd_name || 'N/A'}
+                </Text>
+              </View>
+              <Text style={styles.jobWorkId}>
+                Job Work ID: {challanDetails?.challan?.job_work_id || selectedChallan.job_work_id}
+              </Text>
             </View>
 
             {/* Materials to Receive */}
@@ -196,7 +267,7 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
                         {material.material_name}
                       </Text>
                       <Text style={styles.materialExpected}>
-                        Expected: {challanDetails.materials[index]?.quantity} {challanDetails.materials[index]?.unit}
+                        Expected: {(challanDetails.items || challanDetails.materials)?.[index]?.quantity} {(challanDetails.items || challanDetails.materials)?.[index]?.unit}
                       </Text>
                     </View>
                     <TextInput
@@ -293,7 +364,20 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#666'
+    color: '#666',
+    marginBottom: 10
+  },
+  fixButton: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginTop: 10
+  },
+  fixButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600'
   },
   section: {
     marginBottom: 20,
@@ -391,6 +475,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4
+  },
+  jobWorkId: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0'
   },
   materialsSection: {
     backgroundColor: '#f9f9f9',

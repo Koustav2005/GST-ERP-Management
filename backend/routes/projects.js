@@ -5302,7 +5302,11 @@ router.get('/:projectId/workers', async (req, res) => {
   try {
     const { projectId } = req.params;
     const result = await pool.query(`
-      SELECT pw.*, u.name, u.email
+      SELECT 
+        pw.worker_id,
+        u.name as worker_name,
+        u.email,
+        u.id
       FROM project_workers pw
       JOIN users u ON pw.worker_id = u.id
       WHERE pw.project_id = $1

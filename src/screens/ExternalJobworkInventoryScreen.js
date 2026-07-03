@@ -36,8 +36,12 @@ export default function ExternalJobworkInventoryScreen({ navigation, route }) {
       const response = await api.get(
         `/external-jobwork-materials/inventory/${jobWorkId}/${user.company_id}`
       );
-      setInventoryItems(response.data || []);
-      console.log('Fetched inventory for job work', jobWorkId, ':', response.data);
+      // Filter out issued/collected items on frontend as well
+      const filteredItems = (response.data || []).filter(item => 
+        item.status !== 'issued' && (parseFloat(item.received_quantity) || 0) > 0
+      );
+      setInventoryItems(filteredItems);
+      console.log('Fetched inventory for job work', jobWorkId, ':', filteredItems);
     } catch (error) {
       console.error('Error fetching inventory:', error);
       Alert.alert('Error', 'Failed to fetch inventory');

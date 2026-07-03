@@ -36,6 +36,9 @@ import ExternalJobworkMaterialNotificationScreen from './src/screens/ExternalJob
 import ExternalJobworkChallanScreen from './src/screens/ExternalJobworkChallanScreen';
 import ExternalJobworkReceiptScreen from './src/screens/ExternalJobworkReceiptScreen';
 import ExternalJobworkInventoryScreen from './src/screens/ExternalJobworkInventoryScreen';
+import ExternalJobworkMaterialRequestScreen from './src/screens/ExternalJobworkMaterialRequestScreen';
+import ExternalJobworkOutstockScreen from './src/screens/ExternalJobworkOutstockScreen';
+import ExternalJobworkMaterialCollectionScreen from './src/screens/ExternalJobworkMaterialCollectionScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -221,6 +224,21 @@ export default function App() {
         <Stack.Screen
           name="ExternalJobworkInventory"
           component={ExternalJobworkInventoryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ExternalJobworkMaterialRequest"
+          component={ExternalJobworkMaterialRequestScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ExternalJobworkOutstock"
+          component={ExternalJobworkOutstockScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ExternalJobworkMaterialCollection"
+          component={ExternalJobworkMaterialCollectionScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -71,6 +71,7 @@ export default function ExternalJobworkChallanScreen({ navigation, route }) {
     console.log('selectedStoreIncharge:', selectedStoreIncharge);
     console.log('materialsList:', materialsList);
     console.log('materialsList.length:', materialsList.length);
+    console.log('user:', user);
     
     if (!selectedNotification) {
       Alert.alert('Error', 'Please select a material notification');
@@ -87,10 +88,29 @@ export default function ExternalJobworkChallanScreen({ navigation, route }) {
 
     setLoading(true);
     try {
+      // Construct payload with null checks
+      const job_work_id = selectedNotification.job_work_id;
+      const company_id = user?.company_id;
+      
+      if (!job_work_id) {
+        console.error('❌ job_work_id is missing from selectedNotification!');
+        console.error('Available keys:', Object.keys(selectedNotification));
+        Alert.alert('Error', 'Selected notification missing job_work_id. Please refresh and try again.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!company_id) {
+        console.error('❌ company_id is missing from user!');
+        Alert.alert('Error', 'User company_id missing. Please login again.');
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         notification_id: selectedNotification.id,
-        job_work_id: selectedNotification.job_work_id,
-        company_id: user.company_id,
+        job_work_id: job_work_id,
+        company_id: company_id,
         accountant_id: user.id,
         store_incharge_id: selectedStoreIncharge.id,
         material_description: selectedNotification.material_description,
@@ -101,7 +121,7 @@ export default function ExternalJobworkChallanScreen({ navigation, route }) {
         materials_list: materialsList
       };
 
-      console.log('Payload to send:', payload);
+      console.log('✅ Payload to send:', payload);
 
       const response = await api.post(
         '/external-jobwork-materials/create-challan',

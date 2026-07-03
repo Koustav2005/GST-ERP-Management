@@ -279,6 +279,29 @@ export const projectsAPI = {
       'Content-Type': 'multipart/form-data',
     },
   }),
+
+  // External Job Work Material Request APIs
+  getProjectExternalMaterials: (projectId) => api.get(`/external-jobwork-materials/project/${projectId}/available`),
+  createExternalJobworkMaterialRequest: (data) => api.post('/external-jobwork-materials/request', data),
+  getPendingExternalRequests: () => api.get('/external-jobwork-materials/requests/pending'),
+  getExternalRequestDetails: (requestId) => api.get(`/external-jobwork-materials/requests/${requestId}`),
+  fulfillExternalRequest: (requestId, data) => api.post(`/external-jobwork-materials/requests/${requestId}/fulfill`, data),
+  getExternalJobworkHistory: (params) => {
+    let url = '/external-jobwork-materials/history';
+    if (params) {
+      const queryString = new URLSearchParams(params).toString();
+      url += `?${queryString}`;
+    }
+    return api.get(url);
+  },
+  cancelExternalRequest: (requestId) => api.put(`/external-jobwork-materials/requests/${requestId}/cancel`),
+  getProjectCollections: (projectId) => api.get(`/external-jobwork-materials/project/${projectId}/collections`),
+  
+  // Worker External Material Collection APIs
+  getWorkerExternalMaterialRequests: (workerId) => api.get(`/external-jobwork-materials/worker/${workerId}/requests`),
+  getWorkerCollectedExternalMaterials: (workerId) => api.get(`/external-jobwork-materials/worker/${workerId}/collected`),
+  collectExternalMaterial: (requestId, data) => api.post(`/external-jobwork-materials/requests/${requestId}/collect`, data),
+  getRequestCollections: (requestId) => api.get(`/external-jobwork-materials/requests/${requestId}/collections`),
 };
 
 
