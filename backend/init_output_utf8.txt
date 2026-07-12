@@ -1,3 +1,0 @@
-﻿--- Initializing Missing Procurement Tables (Robust Version) ---
-
-Processing database/orders-schema.sql...

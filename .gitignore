@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+# archived/legacy files (not needed in repository)
+backend/archived/
+
+# overview documentation (project notes and debugging guides)
+overview/
