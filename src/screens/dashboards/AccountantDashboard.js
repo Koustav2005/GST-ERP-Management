@@ -1,15 +1,33 @@
-import React, { useState } from 'react';
+import { SHOW_LEGACY_EXTERNAL_FLOW } from '../../config/features';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import NotificationIcon from '../../components/NotificationIcon';
 import SideMenu from '../../components/SideMenu';
 import Footer from '../../components/Footer';
+import { jobworkDcsAPI } from '../../config/api';
 
 export default function AccountantDashboard({ user, onLogout, navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [sideMenuVisible, setSideMenuVisible] = useState(false);
+    const [pendingRequests, setPendingRequests] = useState(0);
+
+    const loadPendingRequests = useCallback(async () => {
+        try {
+            const res = await jobworkDcsAPI.getPendingRequestCount();
+            setPendingRequests(res.data.count || 0);
+        } catch (e) {
+            setPendingRequests(0);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadPendingRequests();
+        return navigation.addListener('focus', loadPendingRequests);
+    }, [loadPendingRequests, navigation]);
 
     const onRefresh = async () => {
         setRefreshing(true);
+        await loadPendingRequests();
         setRefreshing(false);
     };
 
@@ -23,8 +41,16 @@ export default function AccountantDashboard({ user, onLogout, navigation }) {
         { title: 'Create Purchase Order', icon: '📜', action: 'CreatePO' },
         { title: 'Manage Orders', icon: '📦', action: 'ManageOrders' },
         { title: 'Requirements', icon: '📋', action: 'Requirements' },
+        { title: 'Add To Stock', icon: '➕', action: 'CreateStockItem', badge: pendingRequests },
         { title: 'Internal Job Work', icon: '🛠️', action: 'InternalJobWork' },
-        { title: 'External Material Challan', icon: '📑', action: 'ExternalJobworkChallan' },
+        { title: 'Material Outside Factory', icon: '🚚', action: 'MaterialOutside' },
+        { title: 'Dispatch (External)', icon: '🚛', action: 'EjwDispatches' },
+        { title: 'Customer Material', icon: '📥', action: 'EjwInwards' },
+        { title: 'External Work Orders', icon: '🏭', action: 'EjwWorkOrders' },
+        { title: 'External Reports', icon: '📊', action: 'EjwReports' },
+        { title: 'Customer Master', icon: '🧾', action: 'EjwCustomers' },
+        { title: 'Document Settings', icon: '⚙️', action: 'EjwSettings' },
+        ...(SHOW_LEGACY_EXTERNAL_FLOW ? [{ title: 'External Material Challan', icon: '📑', action: 'ExternalJobworkChallan' }] : []),
     ];
 
     const handleMenuPress = (item) => {
@@ -51,6 +77,11 @@ export default function AccountantDashboard({ user, onLogout, navigation }) {
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => setSideMenuVisible(true)} style={styles.hamburgerBtn}>
                         <Text style={styles.hamburgerText}>☰</Text>
+                        {pendingRequests > 0 ? (
+                            <View style={{ position: 'absolute', top: 2, right: 0, backgroundColor: '#FF3B30', borderRadius: 9, minWidth: 18, paddingHorizontal: 4, alignItems: 'center' }}>
+                                <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>{pendingRequests}</Text>
+                            </View>
+                        ) : null}
                     </TouchableOpacity>
                     <View style={{ flex: 1, marginLeft: 12 }}>
                         <Text style={styles.greeting}>Welcome back,</Text>
@@ -58,7 +89,7 @@ export default function AccountantDashboard({ user, onLogout, navigation }) {
                         <Text style={styles.role}>Accountant</Text>
                     </View>
                     <View style={styles.headerButtons}>
-                        <NotificationIcon user={user} />
+                        <NotificationIcon user={user} navigation={navigation} />
                     </View>
                 </View>
 

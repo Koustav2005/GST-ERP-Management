@@ -18,7 +18,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
-import { enquiriesAPI, usersAPI, getApiUrl } from '../config/api';
+import { enquiriesAPI, usersAPI, masterCustomersAPI, getApiUrl } from '../config/api';
 import Footer from '../components/Footer';
 import Constants from 'expo-constants';
 
@@ -39,6 +39,12 @@ export default function EnquiryScreen({ route, navigation }) {
     const [customerModalVisible, setCustomerModalVisible] = useState(false);
     const [projectTypeModalVisible, setProjectTypeModalVisible] = useState(false);
     const [selectedProjectType, setSelectedProjectType] = useState('regular');
+    // External Job Work belongs to a customer from the customer master; the work order is made for that customer
+    const [customers, setCustomers] = useState([]);
+    const [customerPick, setCustomerPick] = useState('');
+    useEffect(() => {
+        masterCustomersAPI.getAll().then((r) => setCustomers(r.data.customers || [])).catch(() => setCustomers([]));
+    }, []);
     const [poFile, setPoFile] = useState(null);
     const [customerRemarks, setCustomerRemarks] = useState('');
 
@@ -427,6 +433,7 @@ export default function EnquiryScreen({ route, navigation }) {
 
     const handleCustomerAccepted = () => {
         setSelectedProjectType('regular');
+        setCustomerPick(currentEnquiry && currentEnquiry.customer_id ? String(currentEnquiry.customer_id) : '');
         setProjectTypeModalVisible(true);
     };
 
@@ -464,7 +471,21 @@ export default function EnquiryScreen({ route, navigation }) {
         }
     };
 
-    const confirmCustomerAccepted = () => {
+    const confirmCustomerAccepted = async () => {
+        if (selectedProjectType === 'external_job_work') {
+            if (!customerPick) {
+                Alert.alert('Choose the customer', 'External Job Work is for a customer. Pick the customer whose material will be processed.');
+                return;
+            }
+            if (String(currentEnquiry.customer_id || '') !== customerPick) {
+                try {
+                    await enquiriesAPI.update(currentEnquiry.id, { customer_id: Number(customerPick) });
+                } catch (error) {
+                    Alert.alert('Error', error.response?.data?.error || 'Could not save the customer on this enquiry');
+                    return;
+                }
+            }
+        }
         submitCustomerAction('accepted_by_customer', selectedProjectType);
     };
 
@@ -913,6 +934,19 @@ export default function EnquiryScreen({ route, navigation }) {
                             <Text style={styles.projectTypeTitle}>External Job Work</Text>
                             <Text style={styles.projectTypeDescription}>Fabrication work for another company with the same workflow.</Text>
                         </TouchableOpacity>
+
+                        {selectedProjectType === 'external_job_work' ? (
+                            <View style={{ marginTop: 8 }}>
+                                <Text style={{ fontWeight: '600', marginBottom: 4 }}>Customer (owner of the material) *</Text>
+                                <View style={{ borderWidth: 1, borderColor: '#D1D1D6', borderRadius: 8, overflow: 'hidden' }}>
+                                    <Picker selectedValue={customerPick} onValueChange={(v) => setCustomerPick(v)}>
+                                        <Picker.Item label="-- Select customer --" value="" />
+                                        {customers.map((c) => <Picker.Item key={c.id} label={c.name} value={String(c.id)} />)}
+                                    </Picker>
+                                </View>
+                                {customers.length === 0 ? <Text style={{ color: '#FF9500', fontSize: 12, marginTop: 4 }}>No customers yet. Ask Accounts or Management to add the customer in Customer Master.</Text> : null}
+                            </View>
+                        ) : null}
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity

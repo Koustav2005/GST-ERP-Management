@@ -270,7 +270,6 @@ export const projectsAPI = {
       'Content-Type': 'multipart/form-data',
     },
   }),
-  getJobWorkRequests: (companyId) => api.get(`/projects/job-work/company/${companyId}`),
   getExternalJobWorks: (companyId) => api.get(`/projects/job-work/company/${companyId}`),
   getStoreInchargeJobWork: (storeInchargeId) => api.get(`/projects/job-work/store-incharge/${storeInchargeId}`),
   getAccountantJobWork: (accountantId) => api.get(`/projects/job-work/accountant/${accountantId}`),
@@ -306,6 +305,96 @@ export const projectsAPI = {
 
 
 // Notifications API
+// Internal Job Work v2: delivery challans, vendor returns / invoices, stock items
+export const jobworkDcsAPI = {
+  getGstRates: () => api.get('/jobwork-dcs/gst-rates'),
+  getStockItems: (search) => api.get('/jobwork-dcs/stock-items', { params: search ? { search } : {} }),
+  createStockItem: (data) => api.post('/jobwork-dcs/stock-items', data),
+  // stock item requests (Store / PM ask, the accountant resolves)
+  createStockItemRequest: (data) => api.post('/jobwork-dcs/stock-item-requests', data),
+  listStockItemRequests: (params) => api.get('/jobwork-dcs/stock-item-requests', { params }),
+  getStockItemRequest: (id) => api.get(`/jobwork-dcs/stock-item-requests/${id}`),
+  getPendingRequestCount: () => api.get('/jobwork-dcs/stock-item-requests/pending-count'),
+  linkStockItemRequest: (id, stockItemId) => api.post(`/jobwork-dcs/stock-item-requests/${id}/link`, { stock_item_id: stockItemId }),
+  createFromStockItemRequest: (id, data) => api.post(`/jobwork-dcs/stock-item-requests/${id}/create`, data),
+  rejectStockItemRequest: (id, reason) => api.post(`/jobwork-dcs/stock-item-requests/${id}/reject`, { reason }),
+  // PM panel and the outside-factory report
+  getProjectJobWork: (projectId) => api.get(`/jobwork-dcs/project/${projectId}`),
+  getOutsideReport: (params) => api.get('/jobwork-dcs/reports/outside', { params }),
+  getPendingItems: () => api.get('/jobwork-dcs/pending-items'),
+  list: (params) => api.get('/jobwork-dcs', { params }),
+  get: (id) => api.get(`/jobwork-dcs/${id}`),
+  create: (data) => api.post('/jobwork-dcs', data),
+  update: (id, data) => api.put(`/jobwork-dcs/${id}`, data),
+  uploadAttachment: (id, formData) => api.post(`/jobwork-dcs/${id}/attachment`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  approve: (id, data) => api.post(`/jobwork-dcs/${id}/approve`, data),
+  reject: (id, data) => api.post(`/jobwork-dcs/${id}/reject`, data),
+  dispatch: (id) => api.post(`/jobwork-dcs/${id}/dispatch`, {}),
+  move: (id, data) => api.post(`/jobwork-dcs/${id}/move`, data),
+  addReturn: (id, data) => api.post(`/jobwork-dcs/${id}/returns`, data),
+  addVendorInvoice: (id, data) => api.post(`/jobwork-dcs/${id}/vendor-invoices`, data),
+  taxPreview: (data) => api.post('/jobwork-dcs/tax-preview', data),
+  getVendorInvoices: (dcId) => api.get('/jobwork-dcs/vendor-invoices', { params: dcId ? { dc_id: dcId } : {} }),
+};
+
+// External Job Work v2 (customer material in, processed, and back with a delivery challan + tax invoice)
+const multipart = { headers: { 'Content-Type': 'multipart/form-data' } };
+export const masterCustomersAPI = {
+  getAll: (params) => api.get('/master-customers', { params }),
+  create: (data) => api.post('/master-customers', data),
+  update: (id, data) => api.put(`/master-customers/${id}`, data),
+  remove: (id) => api.delete(`/master-customers/${id}`),
+};
+
+export const docSequencesAPI = {
+  getAll: () => api.get('/doc-sequences'),
+  update: (series, data) => api.put(`/doc-sequences/${series}`, data),
+};
+
+export const ejwAPI = {
+  // inward
+  listInwards: (params) => api.get('/ejw/inwards', { params }),
+  getInward: (id) => api.get(`/ejw/inwards/${id}`),
+  createInward: (data) => api.post('/ejw/inwards', data),
+  addReceipt: (id, data) => api.post(`/ejw/inwards/${id}/receipts`, data),
+  attachCustomerDc: (id, data) => api.post(`/ejw/inwards/${id}/customer-dc`, data),
+  getAcknowledgment: (id) => api.get(`/ejw/inwards/${id}/acknowledgment`),
+  uploadInwardDocument: (id, formData) => api.post(`/ejw/inwards/${id}/documents`, formData, multipart),
+  // work orders
+  stockAwaitingWork: () => api.get('/ejw/stock-awaiting-work'),
+  listWorkOrders: (params) => api.get('/ejw/work-orders', { params }),
+  getWorkOrder: (id) => api.get(`/ejw/work-orders/${id}`),
+  createWorkOrder: (data) => api.post('/ejw/work-orders', data),
+  addItemsToWorkOrder: (id, inwardItemIds) => api.post(`/ejw/work-orders/${id}/add-items`, { inward_item_ids: inwardItemIds }),
+  updateWorkOrder: (id, data) => api.put(`/ejw/work-orders/${id}`, data),
+  setExpectedMaterial: (id, note) => api.put(`/ejw/work-orders/${id}/expected-material`, { note }),
+  uploadWorkOrderDocument: (id, formData) => api.post(`/ejw/work-orders/${id}/documents`, formData, multipart),
+  // ready -> confirm
+  markReady: (woId, formData) => api.post(`/ejw/work-orders/${woId}/mark-ready`, formData, multipart),
+  listReadyNotices: (params) => api.get('/ejw/ready-notices', { params }),
+  confirmReady: (id, data) => api.post(`/ejw/ready-notices/${id}/confirm`, data || {}),
+  // dispatch
+  readyForDispatch: () => api.get('/ejw/ready-for-dispatch'),
+  previewDispatch: (data) => api.post('/ejw/dispatches/preview', data),
+  listDispatches: (params) => api.get('/ejw/dispatches', { params }),
+  getDispatch: (id) => api.get(`/ejw/dispatches/${id}`),
+  createDispatch: (data) => api.post('/ejw/dispatches', data),
+  updateDispatch: (id, data) => api.put(`/ejw/dispatches/${id}`, data),
+  deleteDispatch: (id) => api.delete(`/ejw/dispatches/${id}`),
+  issueDispatch: (id, data) => api.post(`/ejw/dispatches/${id}/issue`, data || {}),
+  cancelDispatch: (id, reason) => api.post(`/ejw/dispatches/${id}/cancel`, { reason }),
+  shortClose: (itemId, data) => api.post(`/ejw/inward-items/${itemId}/short-close`, data),
+  // reports
+  report: (name, params) => api.get(`/ejw/reports/${name}`, { params }),
+  // our details printed on documents
+  getCompanyProfile: () => api.get('/ejw/company-profile'),
+  updateCompanyProfile: (data) => api.put('/ejw/company-profile', data),
+  // printable documents (downloaded with the token by utils/ejw.js)
+  pdfPath: (kind, id) => (kind === 'internal-dc' ? `/jobwork-dcs/${id}/pdf` : `/ejw/dispatches/${id}/${kind}.pdf`),
+};
+
 export const notificationsAPI = {
   getAll: (userId) => api.get(`/notifications?user_id=${userId}`),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),

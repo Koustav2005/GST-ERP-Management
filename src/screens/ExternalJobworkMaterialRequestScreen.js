@@ -128,6 +128,7 @@ export default function ExternalJobworkMaterialRequestScreen({ route, navigation
         if (data?.selected) {
           const material = materials.find(m => m.id === parseInt(materialId));
           items.push({
+            ejw_inward_item_id: material.id,
             material_name: material.material_name,
             requested_quantity: parseFloat(data.quantity),
             unit: material.unit,

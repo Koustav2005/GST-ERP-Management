@@ -1,3 +1,4 @@
+import { SHOW_LEGACY_EXTERNAL_FLOW } from '../../config/features';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import NotificationIcon from '../../components/NotificationIcon';
@@ -19,7 +20,8 @@ export default function NPDDashboard({ user, onLogout, navigation }) {
         { title: 'Prototypes', icon: '🔧', action: null },
         { title: 'Testing', icon: '🧪', action: null },
         { title: 'Enquiries', icon: '📋', action: 'Enquiry' },
-        { title: 'Notify Material Arrival', icon: '📬', action: 'ExternalJobworkMaterialNotification' },
+        { title: 'External Work Orders', icon: '🏭', action: 'EjwWorkOrders' },
+        ...(SHOW_LEGACY_EXTERNAL_FLOW ? [{ title: 'Notify Material Arrival', icon: '📬', action: 'ExternalJobworkMaterialNotification' }] : []),
     ];
 
     const handleMenuPress = (item) => {

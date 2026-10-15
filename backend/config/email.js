@@ -155,13 +155,14 @@ const sendJobWorkChallanEmail = async (vendorEmail, jobDetails, items, challanPa
               
               <p>Please find below the details of the materials dispatched for job work under Job ID <strong>${jobDetails.job_id}</strong>.</p>
               
-              <h4>Vehicle Weight Details:</h4>
+${jobDetails.loaded_vehicle_weight != null ? `              <h4>Vehicle Weight Details:</h4>
               <table class="details-table">
                 <tr><td><strong>Loaded Weight:</strong></td><td>${jobDetails.loaded_vehicle_weight} kg</td></tr>
                 <tr><td><strong>Unloaded Weight:</strong></td><td>${jobDetails.unloaded_vehicle_weight} kg</td></tr>
                 <tr><td><strong>Actual Weight:</strong></td><td><strong>${jobDetails.actual_vehicle_weight} kg</strong></td></tr>
               </table>
 
+` : ''}
               <h4>Dispatched Materials:</h4>
               <table class="items-table" style="width: 100%; border: 1px solid #ddd; border-collapse: collapse;">
                 <thead>
@@ -193,12 +194,12 @@ const sendJobWorkChallanEmail = async (vendorEmail, jobDetails, items, challanPa
               
               Hello,
               
-              Please find the dispatched materials list and vehicle weights for Job ID ${jobDetails.job_id} in the attached challan.
-              
+              Please find the dispatched materials list for Job ID ${jobDetails.job_id} in the attached challan.
+              ${jobDetails.loaded_vehicle_weight != null ? `
               Loaded Weight: ${jobDetails.loaded_vehicle_weight} kg
               Unloaded Weight: ${jobDetails.unloaded_vehicle_weight} kg
-              Actual Weight: ${jobDetails.actual_vehicle_weight} kg
-              
+              Actual Weight: ${jobDetails.actual_vehicle_weight} kg` : ''}
+
               Best regards,
               GST ERP Team
             `,

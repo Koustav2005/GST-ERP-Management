@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const { createWorkOrder } = require('../utils/ejw');
 const path = require('path');
 const fs = require('fs');
 const pool = require('../config/database');
@@ -81,6 +82,17 @@ router.post('/upload', authenticateToken, upload.single('pdf'), async (req, res)
         const { company_id } = req.user;
         const { notes } = req.body;
 
+        // optional customer (required later, when the work type is External Job Work)
+        let customerId = null;
+        if (req.body.customer_id) {
+            const c = await pool.query('SELECT id FROM master_customers WHERE id = $1 AND company_id = $2 AND is_active', [parseInt(req.body.customer_id, 10), company_id]);
+            if (c.rows.length === 0) {
+                fs.unlinkSync(req.file.path);
+                return res.status(400).json({ error: 'Customer not found' });
+            }
+            customerId = c.rows[0].id;
+        }
+
         // Generate enquiry number
         const enquiryNumber = await getNextEnquiryNumber(company_id);
 
@@ -92,10 +104,10 @@ router.post('/upload', authenticateToken, upload.single('pdf'), async (req, res)
 
         // Save to database
         const result = await pool.query(
-            `INSERT INTO enquiries (enquiry_number, company_id, uploaded_by, pdf_filename, pdf_path, notes)
-       VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO enquiries (enquiry_number, company_id, uploaded_by, pdf_filename, pdf_path, notes, customer_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-            [enquiryNumber, company_id, req.user.id, req.file.originalname, newPath, notes || null]
+            [enquiryNumber, company_id, req.user.id, req.file.originalname, newPath, notes || null, customerId]
         );
 
         res.status(201).json({
@@ -194,9 +206,10 @@ router.get('/assigned/:userId', authenticateToken, async (req, res) => {
         }
 
         const result = await pool.query(
-            `SELECT e.*, u.name as uploaded_by_name
+            `SELECT e.*, u.name as uploaded_by_name, mc.name as customer_name
              FROM enquiries e
              LEFT JOIN users u ON e.uploaded_by = u.id
+             LEFT JOIN master_customers mc ON mc.id = e.customer_id
              WHERE e.assigned_to = $1
              ORDER BY e.updated_at DESC`,
             [userId]
@@ -220,9 +233,10 @@ router.get('/company/:companyId', authenticateToken, async (req, res) => {
         }
 
         const result = await pool.query(
-            `SELECT e.*, u.name as uploaded_by_name
+            `SELECT e.*, u.name as uploaded_by_name, mc.name as customer_name
        FROM enquiries e
        LEFT JOIN users u ON e.uploaded_by = u.id
+       LEFT JOIN master_customers mc ON mc.id = e.customer_id
        WHERE e.company_id = $1
        ORDER BY e.created_at DESC`,
             [companyId]
@@ -241,9 +255,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const { id } = req.params;
 
         const result = await pool.query(
-            `SELECT e.*, u.name as uploaded_by_name
+            `SELECT e.*, u.name as uploaded_by_name, mc.name as customer_name
        FROM enquiries e
        LEFT JOIN users u ON e.uploaded_by = u.id
+       LEFT JOIN master_customers mc ON mc.id = e.customer_id
        WHERE e.id = $1 AND e.company_id = $2`,
             [id, req.user.company_id]
         );
@@ -293,14 +308,24 @@ router.put('/:id', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const { status, notes } = req.body;
 
+        // customer_id: a number sets it, null clears it, absent leaves it alone
+        const setCustomer = req.body.customer_id !== undefined;
+        let customerId = null;
+        if (setCustomer && req.body.customer_id !== null && req.body.customer_id !== '') {
+            const c = await pool.query('SELECT id FROM master_customers WHERE id = $1 AND company_id = $2 AND is_active', [parseInt(req.body.customer_id, 10), req.user.company_id]);
+            if (c.rows.length === 0) return res.status(400).json({ error: 'Customer not found' });
+            customerId = c.rows[0].id;
+        }
+
         const result = await pool.query(
             `UPDATE enquiries
        SET status = COALESCE($1, status),
            notes = COALESCE($2, notes),
+           customer_id = CASE WHEN $5::boolean THEN $6::int ELSE customer_id END,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $3 AND company_id = $4
        RETURNING *`,
-            [status, notes, id, req.user.company_id]
+            [status, notes, id, req.user.company_id, setCustomer, customerId]
         );
 
         if (result.rows.length === 0) {
@@ -554,7 +579,7 @@ router.post('/:id/upload-po', authenticateToken, upload.single('po'), async (req
 
         // Check permission: Management or assigned NPD
         const enquiryCheck = await pool.query(
-            'SELECT enquiry_number, uploaded_by, assigned_to FROM enquiries WHERE id = $1 AND company_id = $2',
+            'SELECT enquiry_number, uploaded_by, assigned_to, customer_id FROM enquiries WHERE id = $1 AND company_id = $2',
             [id, company_id]
         );
 
@@ -567,6 +592,19 @@ router.post('/:id/upload-po', authenticateToken, upload.single('po'), async (req
         if (role !== 'management' && enquiry.assigned_to !== userId) {
             if (req.file) fs.unlinkSync(req.file.path);
             return res.status(403).json({ error: 'Unauthorized to upload PO for this enquiry' });
+        }
+
+        // External job work belongs to a customer, and one enquiry makes one job.
+        if (projectType === 'external_job_work') {
+            if (!enquiry.customer_id) {
+                if (req.file) fs.unlinkSync(req.file.path);
+                return res.status(400).json({ error: 'Choose the customer on this enquiry before uploading the PO for External Job Work' });
+            }
+            const existingWo = await pool.query('SELECT wo_no FROM work_orders WHERE enquiry_id = $1', [id]);
+            if (existingWo.rows.length > 0) {
+                if (req.file) fs.unlinkSync(req.file.path);
+                return res.status(409).json({ error: `Work order ${existingWo.rows[0].wo_no} already exists for this enquiry` });
+            }
         }
 
         // Rename file with PO prefix
@@ -619,27 +657,34 @@ router.post('/:id/upload-po', authenticateToken, upload.single('po'), async (req
 
         console.log(`[DEBUG] Creating project with sequential PO: ${nextPONumber}`);
 
-        // Create project in projects table
-        const projectResult = await pool.query(
-            `INSERT INTO projects (name, description, company_id, assigned_to, priority, status, po_number, created_by, po_filename, po_path, project_type)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-             RETURNING *`,
-            [
-                projectName,
-                projectDescription,
-                company_id,
-                enquiry.assigned_to || userId,
-                'medium',
-                'pending',
-                nextPONumber,
-                userId,
-                newFilename,
-                newPath,
-                projectType
-            ]
-        );
-
-        const newProject = projectResult.rows[0];
+        // Create the project - and for External Job Work its work order (awaiting material, no PM yet) - together
+        const client = await pool.connect();
+        let newProject;
+        let workOrder = null;
+        try {
+            await client.query('BEGIN');
+            const projectResult = await client.query(
+                `INSERT INTO projects (name, description, company_id, assigned_to, priority, status, po_number, created_by, po_filename, po_path, project_type)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                 RETURNING *`,
+                [projectName, projectDescription, company_id, enquiry.assigned_to || userId, 'medium', 'pending', nextPONumber, userId, newFilename, newPath, projectType]
+            );
+            newProject = projectResult.rows[0];
+            if (projectType === 'external_job_work') {
+                workOrder = await createWorkOrder(client, {
+                    companyId: company_id, customerId: enquiry.customer_id, source: 'enquiry', status: 'awaiting_material',
+                    pmId: null, createdBy: userId, enquiryId: parseInt(id, 10), projectId: newProject.id,
+                    description: projectDescription, customerPoNo: (req.body.customer_po_no || '').trim().slice(0, 100) || nextPONumber,
+                    poFile: { name: req.file.originalname, path: `/uploads/enquiries/${newFilename}` }
+                });
+            }
+            await client.query('COMMIT');
+        } catch (txError) {
+            await client.query('ROLLBACK');
+            throw txError;
+        } finally {
+            client.release();
+        }
 
         // Notify NPD user if assigned
         if (enquiry.assigned_to) {
@@ -659,7 +704,8 @@ router.post('/:id/upload-po', authenticateToken, upload.single('po'), async (req
         res.json({
             message: 'PO uploaded and project created successfully',
             enquiry: updateResult.rows[0],
-            project: newProject
+            project: newProject,
+            work_order: workOrder
         });
     } catch (error) {
         console.error('Error uploading PO:', error);
@@ -781,7 +827,7 @@ router.get('/download-po-file/:filename', async (req, res) => {
 router.put('/:id/customer-review', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, remarks, project_type } = req.body;
+        const { status, remarks } = req.body;
         const { company_id, id: userId } = req.user;
 
         if (!status || !['accepted_by_customer', 'rejected_by_customer'].includes(status)) {
@@ -803,41 +849,6 @@ router.put('/:id/customer-review', authenticateToken, async (req, res) => {
         }
 
         const enquiry = updateResult.rows[0];
-        let newProject = null;
-
-        // If customer accepted and project_type is external_job_work, create project
-        if (status === 'accepted_by_customer' && project_type === 'external_job_work') {
-            console.log('📦 Creating external job work project from accepted enquiry:', enquiry.enquiry_number);
-            
-            const projectName = `EJW-${enquiry.enquiry_number}-${Date.now()}`;
-            const description = `External job work auto-created from Enquiry ${enquiry.enquiry_number} (${enquiry.title}). Accepted by customer on ${new Date().toLocaleString()}`;
-
-            const projectResult = await pool.query(
-                `INSERT INTO projects (name, description, company_id, assigned_to, priority, status, created_by, project_type)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                 RETURNING *`,
-                [projectName, description, company_id, enquiry.assigned_to || userId, 'high', 'active', userId, 'external_job_work']
-            );
-
-            newProject = projectResult.rows[0];
-            console.log('✅ External job work project created:', newProject.id, projectName);
-
-            // Notify assigned NPD user about the new project
-            if (enquiry.assigned_to) {
-                await pool.query(
-                    `INSERT INTO notifications (user_id, title, message, type, project_id)
-                     VALUES ($1, $2, $3, $4, $5)`,
-                    [
-                        enquiry.assigned_to,
-                        'New External Job Work Project Created',
-                        `External job work project "${projectName}" created from accepted enquiry ${enquiry.enquiry_number}`,
-                        'project_created',
-                        newProject.id
-                    ]
-                );
-            }
-        }
-
         // Notify NPD user if assigned
         const enquiryFetch = await pool.query('SELECT enquiry_number, assigned_to FROM enquiries WHERE id = $1', [id]);
         if (enquiryFetch.rows.length > 0 && enquiryFetch.rows[0].assigned_to) {
@@ -856,8 +867,7 @@ router.put('/:id/customer-review', authenticateToken, async (req, res) => {
 
         res.json({
             message: `Customer decision recorded: ${status}`,
-            enquiry: updateResult.rows[0],
-            project: newProject
+            enquiry: updateResult.rows[0]
         });
     } catch (error) {
         console.error('Error recording customer review:', error);

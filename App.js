@@ -32,6 +32,14 @@ import AttendanceScreen from './src/screens/AttendanceScreen';
 import OutStockRequestsScreen from './src/screens/OutStockRequestsScreen';
 import InternalJobWorkScreen from './src/screens/InternalJobWorkScreen';
 import StoreInchargeJobWorkScreen from './src/screens/StoreInchargeJobWorkScreen';
+import JobWorkOutwardScreen from './src/screens/JobWorkOutwardScreen';
+import JobWorkDCFormScreen from './src/screens/JobWorkDCFormScreen';
+import JobWorkDCDetailScreen from './src/screens/JobWorkDCDetailScreen';
+import JobWorkReturnScreen from './src/screens/JobWorkReturnScreen';
+import CreateStockItemScreen from './src/screens/CreateStockItemScreen';
+import StockItemRequestDetailScreen from './src/screens/StockItemRequestDetailScreen';
+import MaterialOutsideScreen from './src/screens/MaterialOutsideScreen';
+import { SHOW_LEGACY_EXTERNAL_FLOW } from './src/config/features';
 import ExternalJobworkMaterialNotificationScreen from './src/screens/ExternalJobworkMaterialNotificationScreen';
 import ExternalJobworkChallanScreen from './src/screens/ExternalJobworkChallanScreen';
 import ExternalJobworkReceiptScreen from './src/screens/ExternalJobworkReceiptScreen';
@@ -39,6 +47,18 @@ import ExternalJobworkInventoryScreen from './src/screens/ExternalJobworkInvento
 import ExternalJobworkMaterialRequestScreen from './src/screens/ExternalJobworkMaterialRequestScreen';
 import ExternalJobworkOutstockScreen from './src/screens/ExternalJobworkOutstockScreen';
 import ExternalJobworkMaterialCollectionScreen from './src/screens/ExternalJobworkMaterialCollectionScreen';
+import EjwInwardFormScreen from './src/screens/EjwInwardFormScreen';
+import EjwInwardsScreen from './src/screens/EjwInwardsScreen';
+import EjwInwardDetailScreen from './src/screens/EjwInwardDetailScreen';
+import EjwWorkOrdersScreen from './src/screens/EjwWorkOrdersScreen';
+import EjwWorkOrderDetailScreen from './src/screens/EjwWorkOrderDetailScreen';
+import EjwConfirmReadyScreen from './src/screens/EjwConfirmReadyScreen';
+import EjwDispatchesScreen from './src/screens/EjwDispatchesScreen';
+import EjwDispatchFormScreen from './src/screens/EjwDispatchFormScreen';
+import EjwDispatchDetailScreen from './src/screens/EjwDispatchDetailScreen';
+import EjwReportsScreen from './src/screens/EjwReportsScreen';
+import EjwCustomersScreen from './src/screens/EjwCustomersScreen';
+import EjwSettingsScreen from './src/screens/EjwSettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -207,25 +227,65 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ExternalJobworkMaterialNotification"
-          component={ExternalJobworkMaterialNotificationScreen}
+          name="JobWorkOutward"
+          component={JobWorkOutwardScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ExternalJobworkChallan"
-          component={ExternalJobworkChallanScreen}
+          name="JobWorkDCForm"
+          component={JobWorkDCFormScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ExternalJobworkReceipt"
-          component={ExternalJobworkReceiptScreen}
+          name="JobWorkReturn"
+          component={JobWorkReturnScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ExternalJobworkInventory"
-          component={ExternalJobworkInventoryScreen}
+          name="JobWorkDCDetail"
+          component={JobWorkDCDetailScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="StockItemRequestDetail"
+          component={StockItemRequestDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MaterialOutside"
+          component={MaterialOutsideScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreateStockItem"
+          component={CreateStockItemScreen}
+          options={{ headerShown: false }}
+        />
+        {/* Old challan-based external job work screens: only reachable when SHOW_LEGACY_EXTERNAL_FLOW is on */}
+        {SHOW_LEGACY_EXTERNAL_FLOW ? (
+          <>
+            <Stack.Screen
+              name="ExternalJobworkMaterialNotification"
+              component={ExternalJobworkMaterialNotificationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ExternalJobworkChallan"
+              component={ExternalJobworkChallanScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ExternalJobworkReceipt"
+              component={ExternalJobworkReceiptScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ExternalJobworkInventory"
+              component={ExternalJobworkInventoryScreen}
+              options={{ headerShown: false }}
+            />
+          </>
+        ) : null}
         <Stack.Screen
           name="ExternalJobworkMaterialRequest"
           component={ExternalJobworkMaterialRequestScreen}
@@ -239,6 +299,67 @@ export default function App() {
         <Stack.Screen
           name="ExternalJobworkMaterialCollection"
           component={ExternalJobworkMaterialCollectionScreen}
+          options={{ headerShown: false }}
+        />
+        {/* External Job Work v2: customer material in, work orders, dispatch (challan + invoice), reports */}
+        <Stack.Screen
+          name="EjwInwardForm"
+          component={EjwInwardFormScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwInwards"
+          component={EjwInwardsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwInwardDetail"
+          component={EjwInwardDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwWorkOrders"
+          component={EjwWorkOrdersScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwWorkOrderDetail"
+          component={EjwWorkOrderDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwConfirmReady"
+          component={EjwConfirmReadyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwDispatches"
+          component={EjwDispatchesScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwDispatchForm"
+          component={EjwDispatchFormScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwDispatchDetail"
+          component={EjwDispatchDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwReports"
+          component={EjwReportsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwCustomers"
+          component={EjwCustomersScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EjwSettings"
+          component={EjwSettingsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

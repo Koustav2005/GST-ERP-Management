@@ -1,3 +1,5 @@
+import { SHOW_LEGACY_EXTERNAL_FLOW } from '../../config/features';
+import { SHOW_LEGACY_CHALLAN_UPLOAD } from '../../config/features';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import NotificationIcon from '../../components/NotificationIcon';
@@ -56,10 +58,16 @@ export default function StoreInchargeDashboard({ user, onLogout, navigation }) {
         { title: 'Inventory', icon: '📦', action: 'Inventory' },
         { title: 'In Stock', icon: '📥', action: 'InStockOrders' },
         { title: 'Out Stock', icon: '📤', action: 'OutStockRequests' },
-        { title: 'Job Work', icon: '🏭', action: 'StoreInchargeJobWork' },
-        { title: 'External Material Receipt', icon: '📥', action: 'ExternalJobworkReceipt' },
-        { title: 'External Inventory', icon: '📦', action: 'ExternalJobworkInventory' },
+        { title: 'Job Work – Outward', icon: '🚚', action: 'JobWorkOutward' },
+        ...(SHOW_LEGACY_CHALLAN_UPLOAD ? [{ title: 'Job Work (old challan upload)', icon: '🏭', action: 'StoreInchargeJobWork' }] : []),
+        { title: 'Material Outside Factory', icon: '🚚', action: 'MaterialOutside' },
+        ...(SHOW_LEGACY_EXTERNAL_FLOW ? [{ title: 'External Material Receipt', icon: '📥', action: 'ExternalJobworkReceipt' }] : []),
+        ...(SHOW_LEGACY_EXTERNAL_FLOW ? [{ title: 'External Inventory', icon: '📦', action: 'ExternalJobworkInventory' }] : []),
         { title: 'External Job Work Outstock', icon: '📦', action: 'ExternalJobworkOutstock' },
+        { title: 'Customer Material Inward', icon: '📥', action: 'EjwInwardForm' },
+        { title: 'Customer Material List', icon: '📋', action: 'EjwInwards' },
+        { title: 'Confirm Ready', icon: '✅', action: 'EjwConfirmReady' },
+        { title: 'External Stock', icon: '📦', action: 'EjwReports' },
         { title: 'Barcodes', icon: '🔖', action: 'Barcodes' },
     ];
 
@@ -94,7 +102,7 @@ export default function StoreInchargeDashboard({ user, onLogout, navigation }) {
                         <Text style={styles.role}>Store Incharge</Text>
                     </View>
                     <View style={styles.headerButtons}>
-                        <NotificationIcon user={user} />
+                        <NotificationIcon user={user} navigation={navigation} />
                     </View>
                 </View>
 

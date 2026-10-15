@@ -151,13 +151,18 @@ export default function StoreInchargeJobWorkScreen({ route, navigation }) {
         formData.append('vendor_email', vendorEmail);
       }
 
-      await projectsAPI.uploadJobWorkChallan(selectedRequest.id, formData);
-      Alert.alert(
-        'Success',
-        vendorEmail
-          ? 'Challan uploaded and email sent to vendor successfully!'
-          : 'Challan uploaded successfully!'
-      );
+      const uploadResponse = await projectsAPI.uploadJobWorkChallan(selectedRequest.id, formData);
+      const emailWarning = uploadResponse.data && uploadResponse.data.warning;
+      if (emailWarning) {
+        Alert.alert('Challan saved, but the email failed', emailWarning);
+      } else {
+        Alert.alert(
+          'Success',
+          vendorEmail
+            ? 'Challan uploaded and email sent to vendor successfully!'
+            : 'Challan uploaded successfully!'
+        );
+      }
 
       // Close modal & reset
       setUploadModalVisible(false);
@@ -235,6 +240,8 @@ export default function StoreInchargeJobWorkScreen({ route, navigation }) {
                     <View style={styles.cardDetails}>
                       <View style={styles.divider} />
 
+                      {item.loaded_vehicle_weight != null ? (
+                      <View>
                       {/* Weight Details */}
                       <Text style={styles.sectionTitle}>🚛 Vehicle Weight Details</Text>
                       <View style={styles.detailsRow}>
@@ -249,6 +256,9 @@ export default function StoreInchargeJobWorkScreen({ route, navigation }) {
                         <Text style={styles.labelBold}>Actual Net Weight:</Text>
                         <Text style={styles.valueBold}>{item.actual_vehicle_weight} kg</Text>
                       </View>
+
+                      </View>
+                      ) : null}
 
                       {/* Vehicle Number */}
                       {item.vehicle_no && (

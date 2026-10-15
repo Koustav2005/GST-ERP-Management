@@ -5,7 +5,7 @@ import { notificationsAPI } from '../config/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export default function NotificationIcon({ user }) {
+export default function NotificationIcon({ user, navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
@@ -36,6 +36,25 @@ export default function NotificationIcon({ user }) {
         }).start(() => {
             setModalVisible(false);
         });
+    };
+
+    // Job work notifications open the screen where the user can act on them.
+    const openNotification = (n) => {
+        if (!navigation || !n || !n.type) return;
+        const role = String(user.role || '').toLowerCase();
+        const data = n.data || {};
+        let target = null;
+        if (n.type === 'jobwork_stock_item_request' && data.request_id) {
+            target = ['StockItemRequestDetail', { user, requestId: data.request_id }];
+        } else if (['jobwork_dc_pending', 'jobwork_return_recorded', 'jobwork_vendor_invoice'].includes(n.type)) {
+            target = ['InternalJobWork', { user }];
+        } else if (['jobwork_dc_approved', 'jobwork_dc_rejected', 'jobwork_stock_item_resolved'].includes(n.type) && role === 'store_incharge') {
+            target = ['JobWorkOutward', { user }];
+        }
+        if (target) {
+            handleClose();
+            setTimeout(() => navigation.navigate(target[0], target[1]), 250);
+        }
     };
 
     const fetchUnreadCount = async () => {
@@ -88,6 +107,7 @@ export default function NotificationIcon({ user }) {
                                 user={user}
                                 refreshTrigger={modalVisible}
                                 onCountUpdate={setUnreadCount}
+                                onOpen={openNotification}
                             />
                         </View>
                     </Animated.View>

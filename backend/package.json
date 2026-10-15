@@ -6,7 +6,15 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "setup": "node setup-database.js"
+    "setup": "node setup-database.js",
+    "migrate:jobwork-v2": "node migrations/001-internal-job-work-v2.js && node migrations/002-job-work-v2-tax-split.js && node migrations/003-stock-item-requests.js && node migrations/004-job-work-bom-link.js && node migrations/005-job-work-weights-optional.js && node migrations/006-job-work-item-kind.js && node migrations/007-job-work-item-code.js",
+    "migrate:ejw-v2": "node migrations/008-customers.js && node migrations/009-doc-sequences.js && node migrations/010-ejw-core.js && node migrations/011-ejw-links.js && node migrations/012-ejw-receipts-numbering.js && node migrations/013-ejw-pending-stock-item.js && node migrations/014-ejw-print.js",
+    "test:jobwork-dcs": "node tests/jobwork-dcs.e2e.js",
+    "test:ejw": "node tests/ejw-phase1.e2e.js",
+    "test:ejw2": "node tests/ejw-phase2.e2e.js",
+    "test:ejw3": "node tests/ejw-phase3.e2e.js",
+    "test:ejw4": "node tests/ejw-phase4.e2e.js",
+    "test": "npm run test:jobwork-dcs && npm run test:ejw && npm run test:ejw2 && npm run test:ejw3 && npm run test:ejw4"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -16,6 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^7.0.13",
+    "pdfkit": "^0.20.2",
     "pg": "^8.11.3",
     "uuid": "^13.0.0"
   },

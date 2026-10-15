@@ -79,6 +79,11 @@ export default function SideMenu({ visible, onClose, menuItems, onMenuPress, use
                             >
                                 <Text style={styles.menuItemIcon}>{item.icon}</Text>
                                 <Text style={styles.menuItemTitle}>{item.title}</Text>
+                                {item.badge > 0 ? (
+                                    <View style={{ backgroundColor: '#FF3B30', borderRadius: 10, minWidth: 20, paddingHorizontal: 6, marginLeft: 8, alignItems: 'center' }}>
+                                        <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>{item.badge}</Text>
+                                    </View>
+                                ) : null}
                             </TouchableOpacity>
                         ))}
                     </ScrollView>

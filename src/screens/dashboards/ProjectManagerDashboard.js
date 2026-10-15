@@ -40,6 +40,8 @@ export default function ProjectManagerDashboard({ user, onLogout, navigation }) 
 
   const menuItems = [
     { title: 'My Projects', icon: '📁', action: 'ProjectList' },
+    { title: 'External Job Work', icon: '🏭', action: 'EjwWorkOrders' },
+    { title: 'External Stock', icon: '📦', action: 'EjwReports' },
     { title: 'Team Members', icon: '👥' },
     { title: 'Task Management', icon: '✅' },
     { title: 'Reports', icon: '📊' },

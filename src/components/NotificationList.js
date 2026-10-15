@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { notificationsAPI } from '../config/api';
 
-export default function NotificationList({ user, refreshTrigger, onCountUpdate }) {
+export default function NotificationList({ user, refreshTrigger, onCountUpdate, onOpen }) {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -62,7 +62,7 @@ export default function NotificationList({ user, refreshTrigger, onCountUpdate }
     const renderItem = ({ item }) => (
         <TouchableOpacity
             style={[styles.notificationItem, !item.is_read && styles.unreadItem]}
-            onPress={() => markAsRead(item)}
+            onPress={() => { markAsRead(item); if (onOpen) onOpen(item); }}
         >
             <View style={styles.notificationHeader}>
                 <Text style={styles.notificationTitle}>{item.title}</Text>

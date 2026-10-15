@@ -2,6 +2,8 @@ const express = require('express');
 const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const { sendJobWorkChallanEmail } = require('../config/email');
+const { createRequest: createStockRequest } = require('./jobwork_stock_requests');
+const { syncWorkOrderPm } = require('../utils/ejw');
 
 const router = express.Router();
 const multer = require('multer');
@@ -385,6 +387,11 @@ router.put('/:id', async (req, res) => {
     }
 
     const updatedProject = result.rows[0];
+
+    // An external job work project has a work order: its PM follows the assignment
+    if (assigned_to !== undefined) {
+      try { await syncWorkOrderPm(pool, updatedProject); } catch (e) { console.error('syncWorkOrderPm failed:', e.message); }
+    }
 
     // Notify Assigned User if changed
     if (assigned_to && updatedProject.assigned_to == assigned_to) {
@@ -5458,6 +5465,12 @@ const jobWorkUpload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }
 });
 
+// Vehicle weights are recorded by Store on the delivery challan now; the PM may leave them out.
+const optionalWeight = (v) => {
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : null;
+};
+
 // Submit a new Job Work Request (Project Manager)
 router.post('/job-work/submit', authenticateToken, jobWorkUpload.array('images', 10), async (req, res) => {
   const client = await pool.connect();
@@ -5474,7 +5487,7 @@ router.post('/job-work/submit', authenticateToken, jobWorkUpload.array('images',
       items
     } = req.body;
 
-    if (!project_id || !job_work_type || !loaded_vehicle_weight || !unloaded_vehicle_weight || !store_incharge_id) {
+    if (!project_id || !job_work_type || !store_incharge_id) {
       return res.status(400).json({ error: 'Required fields are missing' });
     }
 
@@ -5507,9 +5520,9 @@ router.post('/job-work/submit', authenticateToken, jobWorkUpload.array('images',
       req.user.company_id,
       job_work_type,
       purpose || null,
-      parseFloat(loaded_vehicle_weight),
-      parseFloat(unloaded_vehicle_weight),
-      parseFloat(actual_vehicle_weight),
+      optionalWeight(loaded_vehicle_weight),
+      optionalWeight(unloaded_vehicle_weight),
+      optionalWeight(actual_vehicle_weight),
       parseInt(store_incharge_id),
       vehicle_no || null,
       req.user.id
@@ -5518,17 +5531,90 @@ router.post('/job-work/submit', authenticateToken, jobWorkUpload.array('images',
     const jobWorkId = requestInsert.rows[0].id;
 
     // Insert items
-    for (const item of itemsList) {
-      await client.query(`
-        INSERT INTO job_work_items (job_work_id, material_name, hsn, quantity, unit)
-        VALUES ($1, $2, $3, $4, $5)
-      `, [
-        jobWorkId,
-        item.material_name,
-        item.hsn || null,
-        parseFloat(item.quantity),
-        item.unit
-      ]);
+    for (const [itemIndex, item] of itemsList.entries()) {
+      // 'stock': material from the stock item list (the earlier flow). 'product': the product being
+      // developed in this project, which has no stock item yet and is listed for the accountant to add.
+      const itemKind = item.item_kind === 'product' ? 'product' : item.item_kind && item.item_kind !== 'stock' ? null : 'stock';
+      if (!itemKind) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: "item_kind must be 'stock' or 'product'" });
+      }
+
+      // Optional stock item picked by the PM (must belong to this company).
+      let stockItemId = null;
+      if (item.stock_item_id) {
+        const si = await client.query('SELECT id FROM stock_items WHERE id = $1 AND company_id = $2', [parseInt(item.stock_item_id, 10), req.user.company_id]);
+        if (si.rows.length === 0) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: `Stock item not found for "${item.material_name}"` });
+        }
+        stockItemId = si.rows[0].id;
+      }
+
+      // Picked from the project's BOM: remember which BOM row (project BOM or a revision's BOM).
+      // Free-text items carry no link. The row must belong to this project.
+      let bomItemId = null;
+      let revisionBomItemId = null;
+      if (item.bom_item_id) {
+        const bomId = parseInt(item.bom_item_id, 10);
+        if (item.bom_source === 'revision') {
+          const found = await client.query(
+            `SELECT rbi.id FROM revision_bom_items rbi JOIN revisions rv ON rv.id = rbi.revision_id
+              WHERE rbi.id = $1 AND rv.project_id = $2`, [bomId, parseInt(project_id, 10)]);
+          if (found.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: `"${item.material_name}" is not in this project's BOM` });
+          }
+          revisionBomItemId = bomId;
+        } else if (item.bom_source === 'bom') {
+          const found = await client.query(
+            'SELECT id FROM bill_of_materials WHERE id = $1 AND project_id = $2', [bomId, parseInt(project_id, 10)]);
+          if (found.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: `"${item.material_name}" is not in this project's BOM` });
+          }
+          bomItemId = bomId;
+        } else {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: "bom_source must be 'bom' or 'revision'" });
+        }
+      }
+
+      // A product under development has no HSN: it is identified by the PM's drawing / part number,
+      // or by a generated reference (job id + position) when none is given.
+      const itemHsn = itemKind === 'product' ? null : item.hsn || null;
+      const itemCode = itemKind === 'product'
+        ? String(item.item_code || '').trim().slice(0, 100) || `${jobId}-${itemIndex + 1}`
+        : null;
+      const inserted = await client.query(`
+        INSERT INTO job_work_items (job_work_id, material_name, hsn, quantity, unit, stock_item_id, bom_item_id, revision_bom_item_id, item_kind, item_code)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING id
+      `, [jobWorkId, item.material_name, itemHsn, parseFloat(item.quantity), item.unit,
+        stockItemId, bomItemId, revisionBomItemId, itemKind, itemCode]);
+      const newItemId = inserted.rows[0].id;
+
+      // A stock item request made from this form: attach it to the new item, and if the accountant
+      // already resolved it, fill the stock item straight away.
+      if (item.stock_item_request_id) {
+        const rq = await client.query(`
+          UPDATE stock_item_requests
+             SET job_work_item_id = $1, project_id = COALESCE(project_id, $4), updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2 AND company_id = $3 AND job_work_item_id IS NULL
+          RETURNING stock_item_id
+        `, [newItemId, parseInt(item.stock_item_request_id, 10), req.user.company_id, parseInt(project_id, 10)]);
+        if (rq.rows[0] && rq.rows[0].stock_item_id && !stockItemId) {
+          await client.query('UPDATE job_work_items SET stock_item_id = $1 WHERE id = $2', [rq.rows[0].stock_item_id, newItemId]);
+          stockItemId = rq.rows[0].stock_item_id;
+        }
+      }
+
+      // The product being developed goes on the accountant's list to be added to stock.
+      if (itemKind === 'product' && !stockItemId) {
+        await createStockRequest(client, req.user, {
+          name: item.material_name, unit: item.unit, job_work_item_id: newItemId,
+        }, { source: 'product', soft: true });
+      }
     }
 
     // Insert images
@@ -5675,15 +5761,17 @@ router.put('/job-work/:id/challan', authenticateToken, jobWorkUpload.single('cha
 
     const items = itemsRes.rows;
 
+    let warning;
     if (vendor_email) {
       try {
         await sendJobWorkChallanEmail(vendor_email, jobDetails, items, filePath, fileName);
       } catch (emailErr) {
         console.error('Error sending vendor email:', emailErr);
+        warning = `Challan saved, but the email to ${vendor_email} could not be sent: ${emailErr.message}`;
       }
     }
 
-    res.json({ success: true, jobWork: jobDetails });
+    res.json({ success: true, jobWork: jobDetails, ...(warning && { warning }) });
   } catch (error) {
     console.error('Error uploading challan:', error);
     res.status(500).json({ error: 'Server error', details: error.message });

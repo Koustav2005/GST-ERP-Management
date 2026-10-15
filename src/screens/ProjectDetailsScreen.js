@@ -18,8 +18,15 @@ import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { projectsAPI, getApiUrl, enquiriesAPI } from '../config/api';
+import { projectsAPI, getApiUrl, enquiriesAPI, jobworkDcsAPI } from '../config/api';
 import Footer from '../components/Footer';
+import ProjectJobWorkPanel from '../components/jobwork/ProjectJobWorkPanel';
+import { RequestStockItemModal } from '../components/jobwork/Modals';
+import { StockItemPicker } from '../components/jobwork/Pickers';
+
+// item_kind: 'stock' = material from the stock item list (the earlier flow);
+// 'product' = the product being developed in this project, which the accountant then adds to stock.
+const newJobWorkItem = () => ({ material_name: '', hsn: '', quantity: '', unit: 'pcs', bom_key: '', item_code: '', item_kind: 'stock', stock_item_id: '', stock_item_request_id: null });
 
 export default function ProjectDetailsScreen({ route, navigation }) {
   const { project, user } = route.params;
@@ -144,11 +151,20 @@ export default function ProjectDetailsScreen({ route, navigation }) {
   const [jobWorkModalVisible, setJobWorkModalVisible] = useState(false);
   const [jobWorkType, setJobWorkType] = useState('Laser Cutting');
   const [jobWorkPurpose, setJobWorkPurpose] = useState('');
-  const [loadedWeight, setLoadedWeight] = useState('');
-  const [unloadedWeight, setUnloadedWeight] = useState('');
-  const [vehicleNo, setVehicleNo] = useState('');
   const [jobWorkImages, setJobWorkImages] = useState([]); // array of { uri, name, type }
-  const [jobWorkItems, setJobWorkItems] = useState([{ material_name: '', hsn: '', quantity: '', unit: 'pcs' }]);
+  const [jobWorkItems, setJobWorkItems] = useState([newJobWorkItem()]);
+  // BOM rows the PM can pick from: the latest revision's BOM if there is one, else the project BOM
+  const [jobWorkStockItems, setJobWorkStockItems] = useState([]);
+  const [stockRequestIndex, setStockRequestIndex] = useState(null); // item the PM is requesting a stock item for
+
+  // Stock items the PM can pick (optional) when the job work form opens.
+  useEffect(() => {
+    if (jobWorkModalVisible) {
+      jobworkDcsAPI.getStockItems().then((r) => setJobWorkStockItems(r.data.stock_items || [])).catch(() => {});
+    }
+  }, [jobWorkModalVisible]);
+
+  const jobWorkBom = (latestRevision ? latestRevisionBOM : materials || []).map((b, i) => ({ ...b, key: (latestRevision ? 'rev-' : 'bom-') + (b.id ?? i) }));
   const [selectedStoreInchargeForJobWork, setSelectedStoreInchargeForJobWork] = useState('');
   const [selectedAccountantForJobWork, setSelectedAccountantForJobWork] = useState('');
   const [storeInchargeUsers, setStoreInchargeUsers] = useState([]);
@@ -194,17 +210,6 @@ export default function ProjectDetailsScreen({ route, navigation }) {
       Alert.alert('Error', 'Please enter purpose for others.');
       return;
     }
-    if (!loadedWeight || !unloadedWeight) {
-      Alert.alert('Error', 'Please fill vehicle weight details.');
-      return;
-    }
-
-    const actualWeight = parseFloat(loadedWeight) - parseFloat(unloadedWeight);
-    if (actualWeight <= 0) {
-      Alert.alert('Error', 'Loaded weight must be greater than unloaded weight.');
-      return;
-    }
-
     if (!selectedStoreInchargeForJobWork) {
       Alert.alert('Error', 'Please select a Store Incharge.');
       return;
@@ -222,12 +227,18 @@ export default function ProjectDetailsScreen({ route, navigation }) {
       formData.append('project_id', project.id);
       formData.append('job_work_type', jobWorkType);
       formData.append('purpose', jobWorkType === 'Others' ? jobWorkPurpose : '');
-      formData.append('loaded_vehicle_weight', loadedWeight);
-      formData.append('unloaded_vehicle_weight', unloadedWeight);
-      formData.append('vehicle_no', vehicleNo);
-      formData.append('actual_vehicle_weight', actualWeight.toString());
       formData.append('store_incharge_id', selectedStoreInchargeForJobWork);
-      formData.append('items', JSON.stringify(jobWorkItems));
+      // Items picked from the BOM carry which BOM row they came from; free-text items carry no link.
+      formData.append('items', JSON.stringify(jobWorkItems.map((it) => {
+        const bomRow = it.bom_key ? jobWorkBom.find((b) => b.key === it.bom_key) : null;
+        return {
+          material_name: it.material_name, quantity: it.quantity, unit: it.unit, item_kind: it.item_kind,
+          ...(it.item_kind === 'product' ? { item_code: it.item_code || undefined } : { hsn: it.hsn }),
+          stock_item_id: it.stock_item_id || undefined,
+          stock_item_request_id: it.stock_item_request_id || undefined,
+          ...(bomRow ? { bom_source: latestRevision ? 'revision' : 'bom', bom_item_id: bomRow.id } : {}),
+        };
+      })));
 
       jobWorkImages.forEach((img, index) => {
         formData.append('images', {
@@ -243,11 +254,8 @@ export default function ProjectDetailsScreen({ route, navigation }) {
       setJobWorkModalVisible(false);
       setJobWorkType('Laser Cutting');
       setJobWorkPurpose('');
-      setLoadedWeight('');
-      setUnloadedWeight('');
-      setVehicleNo('');
-      setJobWorkImages([]);
-      setJobWorkItems([{ material_name: '', hsn: '', quantity: '', unit: 'pcs' }]);
+                        setJobWorkImages([]);
+      setJobWorkItems([newJobWorkItem()]);
       setSelectedStoreInchargeForJobWork('');
       setSelectedAccountantForJobWork('');
       setSelectedNextPhase('');
@@ -1525,6 +1533,11 @@ export default function ProjectDetailsScreen({ route, navigation }) {
               </View>
             )}
           </View>
+        )}
+
+        {/* Job work sent out of the factory (read-only) */}
+        {(user.role === 'project_manager' || user.role === 'management') && (
+          <ProjectJobWorkPanel projectId={project.id} />
         )}
 
         {/* Status of Project */}
@@ -3221,6 +3234,24 @@ export default function ProjectDetailsScreen({ route, navigation }) {
         </Modal>
       )}
 
+      {/* Request a stock item for a job work item (the job work form is hidden meanwhile) */}
+      <RequestStockItemModal
+        visible={stockRequestIndex !== null}
+        initialName={stockRequestIndex !== null && jobWorkItems[stockRequestIndex] ? jobWorkItems[stockRequestIndex].material_name : ''}
+        initialHsn={stockRequestIndex !== null && jobWorkItems[stockRequestIndex] ? jobWorkItems[stockRequestIndex].hsn : ''}
+        initialUnit={stockRequestIndex !== null && jobWorkItems[stockRequestIndex] ? jobWorkItems[stockRequestIndex].unit : ''}
+        context={{ projectId: project.id, process: jobWorkType === 'Others' ? jobWorkPurpose : jobWorkType,
+          itemDescription: stockRequestIndex !== null && jobWorkItems[stockRequestIndex] ? jobWorkItems[stockRequestIndex].material_name : '' }}
+        onClose={() => { setStockRequestIndex(null); setJobWorkModalVisible(true); }}
+        onDone={(request) => {
+          const index = stockRequestIndex;
+          setJobWorkItems((items) => items.map((it, i) => (i === index ? { ...it, stock_item_request_id: request.id } : it)));
+          setStockRequestIndex(null);
+          setJobWorkModalVisible(true);
+          Alert.alert('Request sent', 'The accountant has been notified. You can submit the job work now: the stock item is filled in once it is created.');
+        }}
+      />
+
       {/* Job Work Modal */}
       {jobWorkModalVisible && (
         <Modal
@@ -3243,11 +3274,8 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                     setJobWorkModalVisible(false);
                     setJobWorkType('Laser Cutting');
                     setJobWorkPurpose('');
-                    setLoadedWeight('');
-                    setUnloadedWeight('');
-                    setVehicleNo('');
-                    setJobWorkImages([]);
-                    setJobWorkItems([{ material_name: '', hsn: '', quantity: '', unit: 'pcs' }]);
+                                                                                setJobWorkImages([]);
+                    setJobWorkItems([newJobWorkItem()]);
                     setSelectedAccountantForJobWork('');
                     setSelectedNextPhase('');
                   }}
@@ -3310,60 +3338,70 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                   </View>
                 )}
 
-                {/* 3. Object Weight Details */}
-                <Text style={[styles.modalSectionTitle, { marginTop: 15 }]}>Vehicle Weights (kg)</Text>
-                <View style={styles.weightInputsContainer}>
-                  <View style={{ flex: 1, marginRight: 10 }}>
-                    <Text style={styles.inputSubLabel}>Loaded Vehicle Weight *</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="e.g. 5000"
-                      keyboardType="numeric"
-                      value={loadedWeight}
-                      onChangeText={setLoadedWeight}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputSubLabel}>Unloaded Vehicle Weight *</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="e.g. 3500"
-                      keyboardType="numeric"
-                      value={unloadedWeight}
-                      onChangeText={setUnloadedWeight}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.actualWeightDisplay}>
-                  <Text style={styles.actualWeightLabel}>Calculated Actual Weight:</Text>
-                  <Text style={styles.actualWeightValue}>
-                    {Math.max(0, (parseFloat(loadedWeight) || 0) - (parseFloat(unloadedWeight) || 0))} kg
-                  </Text>
-                </View>
-
-                {/* 3.5 Vehicle Number */}
-                <Text style={[styles.modalSectionTitle, { marginTop: 15 }]}>Vehicle No.</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. MH-02-AB-1234"
-                  value={vehicleNo}
-                  onChangeText={setVehicleNo}
-                  maxLength={20}
-                />
                 {/* 4. Materials Dispatch Details */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 }}>
                   <Text style={styles.modalSectionTitle}>Materials Loaded</Text>
                   <TouchableOpacity 
                     style={styles.addMaterialBtn}
-                    onPress={() => setJobWorkItems(prev => [...prev, { material_name: '', hsn: '', quantity: '', unit: 'pcs' }])}
+                    onPress={() => setJobWorkItems(prev => [...prev, newJobWorkItem()])}
                   >
                     <Text style={styles.addMaterialText}>＋ Add Item</Text>
                   </TouchableOpacity>
                 </View>
 
                 {jobWorkItems.map((item, index) => (
-                  <View key={index} style={styles.materialRow}>
+                  <View key={index}>
+                  <View style={{ marginBottom: 6 }}>
+                    <Text style={styles.inputSubLabel}>What is going out *</Text>
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={item.item_kind}
+                        style={styles.picker}
+                        onValueChange={(kind) => {
+                          const updated = [...jobWorkItems];
+                          updated[index] = kind === 'product'
+                            ? { ...updated[index], item_kind: 'product', hsn: '', stock_item_id: '', stock_item_request_id: null }
+                            : { ...updated[index], item_kind: 'stock', item_code: '' };
+                          setJobWorkItems(updated);
+                        }}
+                      >
+                        <Picker.Item label="Stock item (material from the stock list)" value="stock" />
+                        <Picker.Item label="Product being developed in this project" value="product" />
+                      </Picker>
+                    </View>
+                    {item.item_kind === 'product' ? (
+                      <Text style={{ color: '#8E8E93', fontSize: 12, marginTop: 4 }}>
+                        A product has no HSN: give its drawing / part no. (a reference is made if you leave it blank). It goes on the accountant's list to be added to stock.
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={{ marginBottom: 6 }}>
+                    <Text style={styles.inputSubLabel}>Pick from this project's BOM</Text>
+                    {jobWorkBom.length === 0 ? (
+                      <Text style={{ color: '#8E8E93', fontSize: 12 }}>This project has no BOM yet: type the item below.</Text>
+                    ) : (
+                      <View style={styles.pickerContainer}>
+                        <Picker
+                          selectedValue={item.bom_key}
+                          style={styles.picker}
+                          onValueChange={(key) => {
+                            const row = jobWorkBom.find((b) => b.key === key);
+                            const updated = [...jobWorkItems];
+                            updated[index] = row
+                              ? { ...updated[index], bom_key: key, material_name: row.material_name, hsn: updated[index].item_kind === 'product' ? '' : row.hsn || '', unit: row.unit || 'pcs', quantity: updated[index].quantity || String(Number(row.quantity)) }
+                              : { ...updated[index], bom_key: '' };
+                            setJobWorkItems(updated);
+                          }}
+                        >
+                          <Picker.Item label="-- Type it below, or pick a BOM item --" value="" />
+                          {jobWorkBom.map((b) => (
+                            <Picker.Item key={b.key} label={`${b.material_name} (${Number(b.quantity)} ${b.unit})`} value={b.key} />
+                          ))}
+                        </Picker>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.materialRow}>
                     <View style={{ flex: 2, marginRight: 8 }}>
                       <Text style={styles.inputSubLabel}>Material Name *</Text>
                       <TextInput
@@ -3373,22 +3411,42 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                         onChangeText={(txt) => {
                           const updated = [...jobWorkItems];
                           updated[index].material_name = txt;
+                          updated[index].bom_key = '';
                           setJobWorkItems(updated);
                         }}
                       />
                     </View>
                     <View style={{ flex: 1, marginRight: 8 }}>
-                      <Text style={styles.inputSubLabel}>HSN</Text>
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="HSN"
-                        value={item.hsn}
-                        onChangeText={(txt) => {
-                          const updated = [...jobWorkItems];
-                          updated[index].hsn = txt;
-                          setJobWorkItems(updated);
-                        }}
-                      />
+                      {item.item_kind === 'product' ? (
+                        <View>
+                          <Text style={styles.inputSubLabel}>Drawing / Part no.</Text>
+                          <TextInput
+                            style={styles.textInput}
+                            placeholder="Auto if blank"
+                            value={item.item_code}
+                            onChangeText={(txt) => {
+                              const updated = [...jobWorkItems];
+                              updated[index].item_code = txt;
+                              setJobWorkItems(updated);
+                            }}
+                            maxLength={100}
+                          />
+                        </View>
+                      ) : (
+                        <View>
+                          <Text style={styles.inputSubLabel}>HSN</Text>
+                          <TextInput
+                            style={styles.textInput}
+                            placeholder="HSN"
+                            value={item.hsn}
+                            onChangeText={(txt) => {
+                              const updated = [...jobWorkItems];
+                              updated[index].hsn = txt;
+                              setJobWorkItems(updated);
+                            }}
+                          />
+                        </View>
+                      )}
                     </View>
                     <View style={{ flex: 1, marginRight: 8 }}>
                       <Text style={styles.inputSubLabel}>Qty *</Text>
@@ -3414,6 +3472,43 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                         </TouchableOpacity>
                       )}
                     </View>
+                  </View>
+                  {item.item_kind === 'stock' ? (
+                    <View style={{ marginBottom: 12 }}>
+                      <Text style={styles.inputSubLabel}>Stock item (optional)</Text>
+                      <StockItemPicker
+                        items={jobWorkStockItems}
+                        value={item.stock_item_id}
+                        onChange={(v) => {
+                          const updated = [...jobWorkItems];
+                          const chosen = jobWorkStockItems.find((st) => String(st.id) === String(v));
+                          updated[index] = { ...updated[index], stock_item_id: v,
+                            ...(chosen && !updated[index].material_name ? { material_name: chosen.name, hsn: chosen.hsn || '', unit: chosen.unit || 'pcs' } : {}) };
+                          setJobWorkItems(updated);
+                        }}
+                      />
+                      {!item.stock_item_id ? (
+                        item.stock_item_request_id ? (
+                          <Text style={{ color: '#FF9500', fontSize: 12, marginTop: 4 }}>
+                            Requested: the accountant will create it, and it is filled in on this item automatically.
+                          </Text>
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => {
+                              if (!item.material_name.trim()) {
+                                Alert.alert('Error', 'Type the material name first.');
+                                return;
+                              }
+                              setStockRequestIndex(index);
+                              setJobWorkModalVisible(false); // one modal at a time; the form state is kept
+                            }}
+                          >
+                            <Text style={{ color: '#007AFF', fontWeight: '600', marginTop: 6 }}>Not in the list? Request stock item</Text>
+                          </TouchableOpacity>
+                        )
+                      ) : null}
+                    </View>
+                  ) : null}
                   </View>
                 ))}
 
@@ -3445,10 +3540,8 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                     setJobWorkModalVisible(false);
                     setJobWorkType('Laser Cutting');
                     setJobWorkPurpose('');
-                    setLoadedWeight('');
-                    setUnloadedWeight('');
-                    setJobWorkImages([]);
-                    setJobWorkItems([{ material_name: '', hsn: '', quantity: '', unit: 'pcs' }]);
+                                                            setJobWorkImages([]);
+                    setJobWorkItems([newJobWorkItem()]);
                     setSelectedStoreInchargeForJobWork('');
                     setSelectedNextPhase('');
                   }}

@@ -15,16 +15,6 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
     fetchChallans();
   }, []);
 
-  const fixStoreInchargeAssignments = async () => {
-    try {
-      console.log('🔧 Fixing store incharge assignments for company:', user.company_id);
-      const response = await api.post(`/external-jobwork-materials/debug/fix-store-incharge/${user.company_id}`, {});
-      Alert.alert('Fixed', response.data.message, [{ text: 'OK', onPress: fetchChallans }]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fix assignments');
-    }
-  };
-
   const fetchChallans = async () => {
     try {
       console.log('🔄 Fetching pending challans for user:', user.id);
@@ -148,29 +138,6 @@ export default function ExternalJobworkReceiptScreen({ navigation, route }) {
       <View style={styles.header}>
         <Text style={styles.title}>Receive External Job Work Materials</Text>
         <Text style={styles.subtitle}>Store Incharge - Receipt & Verification</Text>
-        {challans.length === 0 && (
-          <View>
-            <TouchableOpacity 
-              style={styles.fixButton}
-              onPress={fixStoreInchargeAssignments}
-            >
-              <Text style={styles.fixButtonText}>🔧 Fix Assignments</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.fixButton, {backgroundColor: '#4CAF50', marginTop: 8}]}
-              onPress={async () => {
-                try {
-                  await api.post(`/external-jobwork-materials/debug/reset-challan/8`, {});
-                  Alert.alert('Success', 'Challan 8 reset to pending', [{ text: 'OK', onPress: fetchChallans }]);
-                } catch (error) {
-                  Alert.alert('Error', 'Failed to reset');
-                }
-              }}
-            >
-              <Text style={styles.fixButtonText}>🔄 Reset Challan 8</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       {/* Select Challan */}
